@@ -78,6 +78,8 @@ class FileContent(BaseModel):
 
 class ModelMap(BaseModel):
     """Configuration for which models to use in each stage."""
+    model_config = {"protected_namespaces": ()}
+    
     llm1: str = Field(..., description="Model for discovery stage")
     llm2: str = Field(..., description="Model for metrics stage")
     llm3: str = Field(..., description="Model for validation stage")
@@ -111,6 +113,8 @@ class CostEstimate(BaseModel):
 
 class PipelineResponse(BaseModel):
     """Response from the accessibility pipeline."""
+    model_config = {"protected_namespaces": ()}
+    
     session_id: str = Field(..., description="Session identifier")
     candidates: List[CandidateIssue] = Field(default_factory=list, description="Discovered issues")
     metrics: List[Metric] = Field(default_factory=list, description="Computed metrics")
