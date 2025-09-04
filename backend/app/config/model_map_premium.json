@@ -1,0 +1,6 @@
+{
+  "llm1": "claude-opus-4-1-20250805",
+  "llm2": "deepseek-chat",
+  "llm3": "grok-4",
+  "llm4": "gpt-5"
+}

@@ -1,0 +1,68 @@
+# WCAG 2.2 Thresholds Configuration
+# This file defines the validation thresholds for various WCAG rules
+
+rules:
+  "1.1.1":
+    metric: "alt_text_present"
+    comparator: "=="
+    thresholds:
+      default: true
+    notes: "Non-text content must have text alternatives."
+
+  "1.3.1":
+    metric: "programmatic_structure"
+    comparator: "=="
+    thresholds:
+      default: true
+    notes: "Information and relationships are programmatically determinable."
+
+  "1.4.3":
+    metric: "contrast_ratio"
+    comparator: ">="
+    thresholds:
+      normal_text: 4.5
+      large_text: 3.0
+    notes: "Large text ≥18pt or ≥14pt bold."
+
+  "1.4.6":
+    metric: "contrast_ratio"
+    comparator: ">="
+    thresholds:
+      normal_text: 7.0
+      large_text: 4.5
+    notes: "Enhanced contrast for AAA level."
+
+  "2.1.1":
+    metric: "keyboard_accessible"
+    comparator: "=="
+    thresholds:
+      default: true
+    notes: "All functionality must be keyboard accessible."
+
+  "2.4.7":
+    metric: "focus_indicator_visibility"
+    comparator: "=="
+    thresholds:
+      default: true
+    notes: "Focus indicators must be visible."
+
+  "2.5.5":
+    metric: "target_size_min_px"
+    comparator: ">="
+    thresholds:
+      default: 44
+    notes: "Touch targets must be at least 44px."
+
+  "3.1.1":
+    metric: "language_identified"
+    comparator: "=="
+    thresholds:
+      default: true
+    notes: "Page language must be identified."
+
+  "4.1.2":
+    metric: "name_role_value"
+    comparator: "=="
+    thresholds:
+      default: true
+    notes: "UI components must have accessible names, roles, and values."

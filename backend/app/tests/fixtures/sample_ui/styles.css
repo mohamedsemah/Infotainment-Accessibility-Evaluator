@@ -1,0 +1,57 @@
+/* Sample CSS with accessibility issues */
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #808080;
+  color: #777;
+}
+
+.info { 
+  color: #777; 
+  background: #808080; 
+  font-size: 12px; 
+}
+
+.tiny-btn { 
+  width: 24px; 
+  height: 24px; 
+  background-color: #333;
+  color: white;
+  border: none;
+}
+
+.nav-btn {
+  width: 44px;
+  height: 44px;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+}
+
+.play-btn {
+  width: 30px;
+  height: 30px;
+  background-color: #ff6600;
+  color: white;
+  border: none;
+}
+
+/* Focus styles missing */
+button:focus {
+  outline: none;
+}
+
+/* Good contrast example */
+.good-text {
+  color: #000000;
+  background-color: #ffffff;
+  font-size: 16px;
+}
+
+/* Large text example */
+.large-text {
+  font-size: 24px;
+  font-weight: normal;
+  color: #333;
+  background-color: #fff;
+}
