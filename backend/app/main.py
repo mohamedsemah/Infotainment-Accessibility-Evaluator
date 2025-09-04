@@ -119,7 +119,7 @@ async def run_pipeline(request: PipelineRequest):
         if request.session_id in uploaded_files:
             files = uploaded_files[request.session_id]
         else:
-            files = [{"path": f.path, "content": f.content} for f in request.files]
+            files = request.files
         
         if not files:
             raise HTTPException(status_code=400, detail="No files provided for analysis")

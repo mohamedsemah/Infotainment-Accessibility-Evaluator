@@ -9,13 +9,13 @@ import logging
 import os
 import time
 import yaml
-from typing import Dict, List, Optional, Set, Any
+from typing import Dict, List, Optional, Set, Any, Union
 from pathlib import Path
 
 from .models import (
     PipelineRequest, PipelineResponse, PipelineTimings, CostEstimate,
     CandidateIssue, Metric, ValidationDecision, FixSuggestion,
-    ModelMap
+    ModelMap, FileContent
 )
 from .utils.chunking import chunk_file
 from .utils.color_contrast import contrast_ratio, is_large_text, get_contrast_threshold
@@ -131,7 +131,7 @@ class AccessibilityOrchestrator:
             logger.error(f"Pipeline failed: {e}")
             raise
     
-    async def run_llm1_discovery(self, files: List[Dict[str, str]]) -> List[CandidateIssue]:
+    async def run_llm1_discovery(self, files: List[Union[Dict[str, str], FileContent]]) -> List[CandidateIssue]:
         """
         Stage 1: Discover candidate accessibility issues.
         
@@ -144,8 +144,12 @@ class AccessibilityOrchestrator:
         all_candidates = []
         
         for file_info in files:
-            file_path = file_info['path']
-            content = file_info['content']
+            if isinstance(file_info, dict):
+                file_path = file_info['path']
+                content = file_info['content']
+            else:
+                file_path = file_info.path
+                content = file_info.content
             
             # Chunk the file
             chunks = chunk_file(content, max_tokens=3000, overlap_lines=20)
@@ -196,7 +200,7 @@ class AccessibilityOrchestrator:
         return unique_candidates
     
     async def run_llm2_metrics(self, candidates: List[CandidateIssue], 
-                              files: List[Dict[str, str]]) -> List[Metric]:
+                              files: List[Union[Dict[str, str], FileContent]]) -> List[Metric]:
         """
         Stage 2: Compute required metrics for candidates.
         
@@ -342,7 +346,7 @@ class AccessibilityOrchestrator:
         return decisions
     
     async def run_llm4_fixes(self, decisions: List[ValidationDecision], 
-                            files: List[Dict[str, str]]) -> List[FixSuggestion]:
+                            files: List[Union[Dict[str, str], FileContent]]) -> List[FixSuggestion]:
         """
         Stage 4: Generate fix suggestions for failed decisions.
         
@@ -393,7 +397,7 @@ class AccessibilityOrchestrator:
         return fixes
     
     def _compute_deterministic_metrics(self, metric_name: str, candidate: CandidateIssue, 
-                                     files: List[Dict[str, str]]) -> List[Metric]:
+                                     files: List[Union[Dict[str, str], FileContent]]) -> List[Metric]:
         """Compute metrics deterministically when possible."""
         metrics = []
         
@@ -590,7 +594,7 @@ class AccessibilityOrchestrator:
             llm_model="mock"
         )
     
-    def _mock_fixes_response(self, decision: ValidationDecision, files: List[Dict[str, str]]) -> FixSuggestion:
+    def _mock_fixes_response(self, decision: ValidationDecision, files: List[Union[Dict[str, str], FileContent]]) -> FixSuggestion:
         """Generate mock fix responses for testing."""
         return FixSuggestion(
             candidate_id=decision.candidate_id,
