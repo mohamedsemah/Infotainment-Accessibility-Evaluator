@@ -63,6 +63,7 @@ const useAppStore = create(
         reportStatus: 'idle', // 'idle', 'generating', 'success', 'error'
         reportError: null,
         reportData: null,
+        complianceLevel: 'AA', // 'A', 'AA', 'AAA'
         
         // Progress State
         overallProgress: 0,
@@ -174,6 +175,7 @@ const useAppStore = create(
         setReportStatus: (status) => set({ reportStatus: status }),
         setReportError: (error) => set({ reportError: error }),
         setReportData: (data) => set({ reportData: data }),
+        setComplianceLevel: (level) => set({ complianceLevel: level }),
         resetReport: () => set({
           reportStatus: 'idle',
           reportError: null,
@@ -226,6 +228,7 @@ const useAppStore = create(
           reportStatus: 'idle',
           reportError: null,
           reportData: null,
+          complianceLevel: 'AA',
           overallProgress: 0,
           currentStep: '',
           isProcessing: false

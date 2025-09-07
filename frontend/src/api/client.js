@@ -151,8 +151,8 @@ class ApiClient {
   }
 
   // Report endpoints
-  async getReport(uploadId, format = 'html') {
-    const response = await fetch(`${this.baseURL}/api/report?upload_id=${uploadId}&format=${format}`);
+  async getReport(uploadId, format = 'html', complianceLevel = 'AA') {
+    const response = await fetch(`${this.baseURL}/api/report?upload_id=${uploadId}&format=${format}&compliance_level=${complianceLevel}`);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -166,8 +166,8 @@ class ApiClient {
     return await response.blob();
   }
 
-  async downloadReport(uploadId, format = 'html') {
-    const blob = await this.getReport(uploadId, format);
+  async downloadReport(uploadId, format = 'html', complianceLevel = 'AA') {
+    const blob = await this.getReport(uploadId, format, complianceLevel);
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

@@ -28,13 +28,15 @@ const ResultsPage = () => {
     isProcessing,
     currentStep,
     overallProgress,
+    complianceLevel,
     setClusters,
     setRawFindings,
     setSelectedCluster,
     setSelectedFinding,
     setFilters,
     setCurrentPage,
-    setError
+    setError,
+    setComplianceLevel
   } = useAppStore();
 
   const [showFilters, setShowFilters] = useState(false);
@@ -100,8 +102,8 @@ const ResultsPage = () => {
 
   const handleGenerateReport = async () => {
     try {
-      console.log('Generating report for upload:', uploadId);
-      await apiClient.downloadReport(uploadId, 'html');
+      console.log('Generating report for upload:', uploadId, 'with compliance level:', complianceLevel);
+      await apiClient.downloadReport(uploadId, 'html', complianceLevel);
       console.log('Report generated successfully');
     } catch (error) {
       console.error('Failed to generate report:', error);
@@ -208,6 +210,22 @@ const ResultsPage = () => {
                 <RefreshCw className={`w-4 h-4 mr-2 ${isProcessing ? 'animate-spin' : ''}`} />
                 Recheck
               </button>
+              
+              <div className="flex items-center gap-2">
+                <label htmlFor="compliance-level" className="text-sm font-medium text-gray-700">
+                  Target Level:
+                </label>
+                <select
+                  id="compliance-level"
+                  value={complianceLevel}
+                  onChange={(e) => setComplianceLevel(e.target.value)}
+                  className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="A">Level A (Basic)</option>
+                  <option value="AA">Level AA (Standard)</option>
+                  <option value="AAA">Level AAA (Enhanced)</option>
+                </select>
+              </div>
               
               <button
                 onClick={handleGenerateReport}

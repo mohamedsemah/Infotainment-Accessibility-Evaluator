@@ -5,9 +5,9 @@ HTML report generation service.
 import os
 from typing import Dict, Any, List
 from datetime import datetime
-from jinja2 import Template
+from jinja2 import Template, Environment
 
-async def generate_html_report(upload_id: str, upload_path: str, include_patches: bool = True) -> str:
+async def generate_html_report(upload_id: str, upload_path: str, include_patches: bool = True, compliance_level: str = "AA") -> str:
     """Generate HTML accessibility report."""
     
     # Import here to avoid circular imports
@@ -67,7 +67,7 @@ async def generate_html_report(upload_id: str, upload_path: str, include_patches
             "total_findings": total_findings,
             "total_clusters": total_clusters,
             "total_patches": 0,  # No patches generated yet
-            "compliance_level": "AA",
+            "compliance_level": compliance_level,
             "overall_score": overall_score
         },
         "findings": findings,
@@ -77,7 +77,7 @@ async def generate_html_report(upload_id: str, upload_path: str, include_patches
         "recommendations": recommendations
     }
     
-    # Load HTML template
+    # Load HTML template with custom filters
     template = _get_html_template()
     
     # Render template
@@ -87,6 +87,12 @@ async def generate_html_report(upload_id: str, upload_path: str, include_patches
 
 def _get_html_template() -> Template:
     """Get HTML report template."""
+    # Create Jinja2 environment with custom filters
+    env = Environment()
+    env.filters['format_severity'] = _format_severity
+    env.filters['format_criterion'] = _format_criterion
+    env.filters['format_selector'] = _format_selector
+    
     template_content = """
 <!DOCTYPE html>
 <html lang="en">
@@ -435,17 +441,18 @@ def _get_html_template() -> Template:
         <div class="section-header">Findings</div>
         <div class="section-content">
             {% for finding in findings %}
-            <div class="finding {{ finding.severity }}">
+            <div class="finding {{ finding.severity|lower }}">
                 <div class="finding-header">
                     <div class="finding-title">{{ finding.description }}</div>
-                    <div class="finding-severity severity-{{ finding.severity }}">{{ finding.severity }}</div>
+                    <div class="finding-severity severity-{{ finding.severity|lower }}">{{ finding.severity|format_severity }}</div>
                 </div>
                 <div class="finding-details">
+                    <strong>Severity Level:</strong> {{ finding.severity|format_severity }}<br>
                     <strong>WCAG Criterion:</strong> {{ finding.wcag_criterion }}<br>
-                    <strong>Criterion Type:</strong> {{ finding.criterion }}
+                    <strong>Criterion Type:</strong> {{ finding.criterion|format_criterion }}
                 </div>
                 <div class="finding-location">
-                    {{ finding.file_path }}:{{ finding.line_number }} ({{ finding.selector }})
+                    {{ finding.file_path }}:{{ finding.line_number }} - {{ finding.selector|format_selector }}
                 </div>
             </div>
             {% endfor %}
@@ -459,11 +466,11 @@ def _get_html_template() -> Template:
             <div class="cluster">
                 <div class="cluster-header">
                     {{ cluster.summary }}
-                    <span class="finding-severity severity-{{ cluster.severity }}">{{ cluster.severity }}</span>
+                    <span class="finding-severity severity-{{ cluster.severity|lower }}">{{ cluster.severity|format_severity }}</span>
                 </div>
                 <div class="cluster-content">
                     <strong>WCAG Criterion:</strong> {{ cluster.wcag_criterion }}<br>
-                    <strong>Occurrences:</strong> {{ cluster.occurrences }}
+                    <strong>Occurrences:</strong> {{ cluster.occurrences|length if cluster.occurrences else 0 }}
                 </div>
             </div>
             {% endfor %}
@@ -512,4 +519,46 @@ def _get_html_template() -> Template:
 </html>
     """
     
-    return Template(template_content)
+    return env.from_string(template_content)
+
+def _format_severity(severity):
+    """Format severity level for display."""
+    if isinstance(severity, str):
+        # Handle enum string values like "SeverityLevel.HIGH"
+        if "SeverityLevel." in severity:
+            return severity.split(".")[-1].title()
+        # Handle direct values like "high"
+        return severity.title()
+    return str(severity).title()
+
+def _format_criterion(criterion):
+    """Format criterion type for display."""
+    if isinstance(criterion, str):
+        # Handle enum string values like "CriterionType.CONTRAST"
+        if "CriterionType." in criterion:
+            return criterion.split(".")[-1].title()
+        # Handle direct values like "contrast"
+        return criterion.title()
+    return str(criterion).title()
+
+def _format_selector(selector):
+    """Format selector for display."""
+    if not selector:
+        return "N/A"
+    
+    # Remove common prefixes and clean up
+    selector = str(selector).strip()
+    
+    # Handle cases like ": (wifi)" -> "Wifi"
+    if selector.startswith(": ("):
+        return selector[3:-1].title()
+    
+    # Handle cases like "(wifi)" -> "Wifi"
+    if selector.startswith("(") and selector.endswith(")"):
+        return selector[1:-1].title()
+    
+    # Handle CSS selectors
+    if selector.startswith("."):
+        return selector[1:].title()
+    
+    return selector

@@ -44,10 +44,15 @@ def get_analysis_results(upload_id: str) -> Dict[str, Any]:
 async def generate_report(
     upload_id: str = Query(..., description="Upload ID to report on"),
     format: str = Query("html", description="Report format (html, pdf, csv, json)"),
-    include_patches: bool = Query(True, description="Include patches in report")
+    include_patches: bool = Query(True, description="Include patches in report"),
+    compliance_level: str = Query("AA", description="Target WCAG compliance level (A, AA, AAA)")
 ):
     """Generate accessibility report."""
     try:
+        # Validate compliance level
+        if compliance_level.upper() not in ["A", "AA", "AAA"]:
+            raise HTTPException(status_code=400, detail="Invalid compliance level. Use: A, AA, or AAA")
+        
         # Get upload path
         upload_path = get_upload_path(upload_id)
         if not upload_path:
@@ -55,24 +60,24 @@ async def generate_report(
         
         # Generate report based on format
         if format == "html":
-            html_content = await generate_html_report(upload_id, upload_path, include_patches)
+            html_content = await generate_html_report(upload_id, upload_path, include_patches, compliance_level.upper())
             return HTMLResponse(content=html_content, media_type="text/html")
         elif format == "pdf":
-            pdf_path = await _generate_pdf_report(upload_id, upload_path, include_patches)
+            pdf_path = await _generate_pdf_report(upload_id, upload_path, include_patches, compliance_level.upper())
             return FileResponse(
                 path=pdf_path,
                 media_type="application/pdf",
                 filename=f"accessibility-report-{upload_id}.pdf"
             )
         elif format == "csv":
-            csv_path = await _generate_csv_report(upload_id, upload_path, include_patches)
+            csv_path = await _generate_csv_report(upload_id, upload_path, include_patches, compliance_level.upper())
             return FileResponse(
                 path=csv_path,
                 media_type="text/csv",
                 filename=f"accessibility-report-{upload_id}.csv"
             )
         elif format == "json":
-            json_data = await _generate_json_report(upload_id, upload_path, include_patches)
+            json_data = await _generate_json_report(upload_id, upload_path, include_patches, compliance_level.upper())
             return json_data
         else:
             raise HTTPException(status_code=400, detail="Invalid format. Use: html, pdf, csv, json")
@@ -314,7 +319,7 @@ async def _generate_html_report(upload_id: str, upload_path: str, include_patche
     
     return report
 
-async def _generate_pdf_report(upload_id: str, upload_path: str, include_patches: bool) -> str:
+async def _generate_pdf_report(upload_id: str, upload_path: str, include_patches: bool, compliance_level: str = "AA") -> str:
     """Generate PDF report."""
     # This would generate a PDF report
     # For now, return a placeholder path
@@ -328,7 +333,7 @@ async def _generate_pdf_report(upload_id: str, upload_path: str, include_patches
     
     return pdf_path
 
-async def _generate_csv_report(upload_id: str, upload_path: str, include_patches: bool) -> str:
+async def _generate_csv_report(upload_id: str, upload_path: str, include_patches: bool, compliance_level: str = "AA") -> str:
     """Generate CSV report."""
     # This would generate a CSV report
     # For now, return a placeholder path
@@ -343,7 +348,7 @@ async def _generate_csv_report(upload_id: str, upload_path: str, include_patches
     
     return csv_path
 
-async def _generate_json_report(upload_id: str, upload_path: str, include_patches: bool) -> Dict[str, Any]:
+async def _generate_json_report(upload_id: str, upload_path: str, include_patches: bool, compliance_level: str = "AA") -> Dict[str, Any]:
     """Generate JSON report."""
     # This would generate a JSON report
     # For now, return mock data
@@ -355,7 +360,7 @@ async def _generate_json_report(upload_id: str, upload_path: str, include_patche
             "total_findings": 5,
             "total_clusters": 3,
             "total_patches": 2,
-            "compliance_level": "AA",
+            "compliance_level": compliance_level,
             "overall_score": 75
         },
         "findings": [
