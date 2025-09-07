@@ -20,6 +20,9 @@ async def cluster_findings(
     """
     try:
         logger.info(f"Clustering {len(request.findings)} findings")
+        print(f"DEBUG: Cluster request - findings count: {len(request.findings)}")
+        print(f"DEBUG: Cluster request - method: {request.clustering_method}")
+        print(f"DEBUG: Cluster request - threshold: {request.similarity_threshold}")
         
         # Perform clustering
         clusters = await cluster_service.cluster_findings(
@@ -41,7 +44,7 @@ async def cluster_findings(
         # Group by agent
         agent_counts = {}
         for cluster in clusters:
-            agent = cluster.agent
+            agent = cluster.occurrences[0].agent if cluster.occurrences else 'unknown'
             agent_counts[agent] = agent_counts.get(agent, 0) + len(cluster.occurrences)
         
         response = ClusterResponse(

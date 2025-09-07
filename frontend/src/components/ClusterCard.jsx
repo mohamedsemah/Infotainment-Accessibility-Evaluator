@@ -88,18 +88,18 @@ const ClusterCard = ({
               
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {cluster.title}
+                  {cluster.summary}
                 </h3>
                 
                 <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                  {cluster.description}
+                  {cluster.summary}
                 </p>
                 
                 <div className="flex items-center space-x-4 text-sm">
                   <div className="flex items-center space-x-1">
                     <span className="text-gray-500">Agent:</span>
                     <span className="font-medium text-gray-900 capitalize">
-                      {cluster.agent.replace('_', ' ')}
+                      {(cluster.occurrences[0]?.agent || 'unknown').replace('_', ' ')}
                     </span>
                   </div>
                   

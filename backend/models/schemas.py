@@ -62,6 +62,7 @@ class Finding(BaseModel):
     severity: SeverityLevel
     confidence: ConfidenceLevel
     wcag_criterion: str
+    agent: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
 
 class ClusterKey(BaseModel):

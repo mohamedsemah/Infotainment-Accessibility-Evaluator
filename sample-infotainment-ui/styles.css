@@ -1,0 +1,294 @@
+/* ISSUE: Poor color contrast, missing focus styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #666; /* ISSUE: Low contrast text */
+    line-height: 1.4;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ISSUE: Poor heading contrast */
+h2, h3 {
+    color: #888; /* ISSUE: Very low contrast */
+    margin-bottom: 15px;
+}
+
+/* ISSUE: No focus indicators, poor contrast buttons */
+button {
+    background-color: #ccc; /* ISSUE: Low contrast */
+    color: #333;
+    border: 1px solid #999;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background-color: #bbb;
+}
+
+/* ISSUE: No focus styles for accessibility */
+button:focus {
+    outline: none; /* ISSUE: Removes focus indicator */
+}
+
+/* ISSUE: Poor contrast input fields */
+input[type="text"], input[type="range"] {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 4px;
+    color: #666; /* ISSUE: Low contrast */
+}
+
+input:focus {
+    outline: 2px solid #007bff; /* ISSUE: Only blue focus, not high contrast */
+}
+
+/* ISSUE: Missing labels, poor contrast */
+.search-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #e8e8e8; /* ISSUE: Low contrast background */
+    border-radius: 8px;
+}
+
+.search-section input {
+    width: 300px;
+    margin-right: 10px;
+}
+
+/* ISSUE: No ARIA support, poor contrast */
+.media-player {
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.play-btn, .prev-btn, .next-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 16px;
+}
+
+.volume-slider {
+    margin-left: 20px;
+}
+
+.volume-slider input {
+    width: 100px;
+}
+
+.track-info {
+    color: #777; /* ISSUE: Low contrast */
+}
+
+.track-title {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.artist {
+    color: #999; /* ISSUE: Very low contrast */
+}
+
+/* ISSUE: Seizure-inducing animations */
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes flash {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* ISSUE: Flashing indicators - seizure risk */
+.status-indicators {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.indicator {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.wifi {
+    background-color: #4CAF50; /* ISSUE: High contrast but flashing */
+    color: white;
+}
+
+.bluetooth {
+    background-color: #2196F3; /* ISSUE: High contrast but pulsing */
+    color: white;
+}
+
+.gps {
+    background-color: #FF9800; /* ISSUE: High contrast but flashing */
+    color: white;
+}
+
+/* ISSUE: No keyboard navigation support */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.menu-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.menu-item:hover {
+    background-color: #f0f0f0;
+}
+
+/* ISSUE: No focus styles for keyboard navigation */
+.menu-item:focus {
+    outline: 2px solid #007bff; /* ISSUE: Not high contrast enough */
+}
+
+.menu-item img {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 10px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.menu-item span {
+    display: block;
+    color: #333;
+    font-weight: 500;
+}
+
+/* ISSUE: Poor contrast climate control */
+.climate-control {
+    background-color: #f8f8f8;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.temp-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.temp-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #555; /* ISSUE: Low contrast */
+}
+
+.temp-controls button {
+    width: 30px;
+    height: 30px;
+    margin: 0 5px;
+}
+
+.fan-controls {
+    margin-top: 15px;
+}
+
+.fan-controls label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666; /* ISSUE: Low contrast */
+}
+
+.fan-controls input {
+    width: 200px;
+}
+
+/* ISSUE: Poor contrast notifications */
+.notifications {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.notification {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 300px;
+}
+
+.notification-text {
+    color: #333;
+    flex: 1;
+}
+
+.notification button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #999; /* ISSUE: Low contrast */
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+}
+
+.notification button:hover {
+    color: #666;
+}
+
+/* ISSUE: No high contrast mode support */
+@media (prefers-contrast: high) {
+    /* No high contrast styles defined */
+}
+
+/* ISSUE: No reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    /* No reduced motion styles defined */
+}

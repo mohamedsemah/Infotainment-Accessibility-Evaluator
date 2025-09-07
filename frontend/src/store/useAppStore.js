@@ -124,9 +124,11 @@ const useAppStore = create(
         
         // Findings Actions
         setRawFindings: (findings) => set({ rawFindings: findings }),
+        setFindings: (findings) => set({ rawFindings: findings }),
         setClusters: (clusters) => set({ clusters }),
         setSelectedCluster: (cluster) => set({ selectedCluster: cluster }),
         setSelectedFinding: (finding) => set({ selectedFinding: finding }),
+        setError: (error) => set({ uploadError: error }),
         resetFindings: () => set({
           rawFindings: [],
           clusters: [],

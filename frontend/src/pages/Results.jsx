@@ -33,7 +33,8 @@ const ResultsPage = () => {
     setSelectedCluster,
     setSelectedFinding,
     setFilters,
-    setCurrentPage
+    setCurrentPage,
+    setError
   } = useAppStore();
 
   const [showFilters, setShowFilters] = useState(false);
@@ -48,11 +49,35 @@ const ResultsPage = () => {
 
   const loadResults = async () => {
     try {
-      // This would typically load from the store or API
-      // For now, we'll simulate loading
       console.log('Loading results for upload:', uploadId);
+      
+      // Step 1: Run pre-scan analysis
+      const analysisResult = await apiClient.analyzeUpload(uploadId);
+      console.log('Analysis result:', analysisResult);
+      
+      // Step 2: Create agent plan
+      const plan = await apiClient.createPlan(uploadId, analysisResult);
+      console.log('Agent plan:', plan);
+      
+      // Step 3: Execute agents
+      const agentResults = await apiClient.runAgents(uploadId);
+      console.log('Agent results:', agentResults);
+      
+      // Step 4: Cluster findings
+      const findings = agentResults.all_findings || [];
+      console.log('Findings to cluster:', findings);
+      console.log('Findings count:', findings.length);
+      
+      const clusters = await apiClient.clusterFindings(findings);
+      console.log('Clustered findings:', clusters);
+      
+      // Update store with results
+      setClusters(clusters.clusters || []);
+      setRawFindings(agentResults.all_findings || []);
+      
     } catch (error) {
       console.error('Failed to load results:', error);
+      setError('Failed to load analysis results');
     }
   };
 

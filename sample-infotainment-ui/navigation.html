@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation System</title>
+    <style>
+        /* ISSUE: Poor contrast, no focus styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #cccccc; /* ISSUE: Low contrast on dark background */
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* ISSUE: No heading hierarchy */
+        h1 {
+            color: #999999; /* ISSUE: Very low contrast */
+            margin-bottom: 30px;
+        }
+        
+        /* ISSUE: No keyboard navigation support */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            background-color: #333;
+            color: #ccc;
+            font-size: 16px;
+        }
+        
+        .search-input:focus {
+            outline: 2px solid #007bff; /* ISSUE: Not high contrast enough */
+        }
+        
+        .search-btn {
+            padding: 12px 24px;
+            background-color: #555; /* ISSUE: Low contrast */
+            color: #ccc;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .search-btn:hover {
+            background-color: #666;
+        }
+        
+        /* ISSUE: No focus styles */
+        .search-btn:focus {
+            outline: none;
+        }
+        
+        /* ISSUE: No ARIA support for map */
+        .map-container {
+            position: relative;
+            height: 400px;
+            background-color: #222;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .map-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #666;
+        }
+        
+        /* ISSUE: No keyboard navigation for route options */
+        .route-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .route-card {
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .route-card:hover {
+            background-color: #444;
+        }
+        
+        /* ISSUE: No focus styles for route cards */
+        .route-card:focus {
+            outline: 2px solid #007bff;
+        }
+        
+        .route-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #aaa; /* ISSUE: Low contrast */
+            margin-bottom: 10px;
+        }
+        
+        .route-details {
+            color: #777; /* ISSUE: Very low contrast */
+            font-size: 14px;
+        }
+        
+        /* ISSUE: No ARIA labels for controls */
+        .navigation-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .control-btn {
+            padding: 10px 20px;
+            background-color: #444; /* ISSUE: Low contrast */
+            color: #ccc;
+            border: 1px solid #666;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .control-btn:hover {
+            background-color: #555;
+        }
+        
+        .control-btn:focus {
+            outline: none; /* ISSUE: Removes focus indicator */
+        }
+        
+        /* ISSUE: No high contrast mode support */
+        @media (prefers-contrast: high) {
+            /* No high contrast styles */
+        }
+        
+        /* ISSUE: No reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            /* No reduced motion styles */
+        }
+    </style>
+</head>
+<body>
+    <!-- ISSUE: No main landmark -->
+    <div class="nav-container">
+        <!-- ISSUE: No proper heading hierarchy -->
+        <h1>Navigation</h1>
+        
+        <!-- ISSUE: No form labels -->
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Enter destination" id="dest-input">
+            <button class="search-btn" onclick="searchDestination()">Search</button>
+        </div>
+        
+        <!-- ISSUE: No ARIA labels for map -->
+        <div class="map-container" role="img" aria-label="Map view">
+            <div class="map-placeholder">
+                <h2>Map View</h2>
+                <p>Interactive map will be displayed here</p>
+            </div>
+        </div>
+        
+        <!-- ISSUE: No keyboard navigation support -->
+        <div class="route-options">
+            <div class="route-card" tabindex="0" onclick="selectRoute(1)">
+                <div class="route-title">Fastest Route</div>
+                <div class="route-details">
+                    <div>Distance: 15.2 miles</div>
+                    <div>Time: 25 minutes</div>
+                    <div>Traffic: Light</div>
+                </div>
+            </div>
+            
+            <div class="route-card" tabindex="0" onclick="selectRoute(2)">
+                <div class="route-title">Scenic Route</div>
+                <div class="route-details">
+                    <div>Distance: 18.7 miles</div>
+                    <div>Time: 35 minutes</div>
+                    <div>Traffic: Moderate</div>
+                </div>
+            </div>
+            
+            <div class="route-card" tabindex="0" onclick="selectRoute(3)">
+                <div class="route-title">Eco Route</div>
+                <div class="route-details">
+                    <div>Distance: 16.1 miles</div>
+                    <div>Time: 28 minutes</div>
+                    <div>Traffic: Light</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ISSUE: No ARIA labels for controls -->
+        <div class="navigation-controls">
+            <button class="control-btn" onclick="startNavigation()">Start Navigation</button>
+            <button class="control-btn" onclick="stopNavigation()">Stop</button>
+            <button class="control-btn" onclick="muteVoice()">Mute Voice</button>
+            <button class="control-btn" onclick="showTraffic()">Traffic Info</button>
+        </div>
+        
+        <!-- ISSUE: No live regions for dynamic updates -->
+        <div id="navigation-status" style="display: none;">
+            <h3>Navigation Status</h3>
+            <p id="current-instruction">Turn left in 500 feet</p>
+            <p id="next-instruction">Then turn right onto Main Street</p>
+        </div>
+    </div>
+    
+    <script>
+        // ISSUE: No keyboard event handling
+        function searchDestination() {
+            const input = document.getElementById('dest-input');
+            const destination = input.value;
+            
+            if (destination.trim() === '') {
+                // ISSUE: No accessible error message
+                alert('Please enter a destination');
+                return;
+            }
+            
+            // ISSUE: No loading state announcement
+            console.log('Searching for:', destination);
+        }
+        
+        // ISSUE: No ARIA state management
+        function selectRoute(routeId) {
+            // ISSUE: No announcement of route selection
+            console.log('Selected route:', routeId);
+            
+            // Remove previous selection
+            document.querySelectorAll('.route-card').forEach(card => {
+                card.style.borderColor = '#555';
+            });
+            
+            // Highlight selected route
+            event.currentTarget.style.borderColor = '#007bff';
+        }
+        
+        // ISSUE: No keyboard support
+        function startNavigation() {
+            // ISSUE: No announcement of navigation start
+            console.log('Starting navigation');
+            document.getElementById('navigation-status').style.display = 'block';
+        }
+        
+        function stopNavigation() {
+            // ISSUE: No announcement of navigation stop
+            console.log('Stopping navigation');
+            document.getElementById('navigation-status').style.display = 'none';
+        }
+        
+        function muteVoice() {
+            // ISSUE: No announcement of mute state
+            console.log('Voice muted');
+        }
+        
+        function showTraffic() {
+            // ISSUE: No announcement of traffic info
+            console.log('Showing traffic information');
+        }
+        
+        // ISSUE: No focus management
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('dest-input');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchDestination();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

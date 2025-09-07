@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from models.schemas import Finding, Cluster
+from models.schemas import Finding, Cluster, ClusterKey
 from utils.id_gen import generate_id
 import logging
 from datetime import datetime
@@ -48,19 +48,17 @@ class ClusterFindingsService:
             # Create new cluster
             cluster = Cluster(
                 id=generate_id(),
-                title=self._generate_cluster_title(finding),
-                description=self._generate_cluster_description(finding),
+                criterion=finding.criterion,
+                key=ClusterKey(
+                    criterion=finding.criterion,
+                    key_components={"selector": finding.selector, "agent": finding.agent},
+                    root_cause=self._extract_root_cause(finding)
+                ),
+                summary=self._generate_cluster_title(finding),
                 severity=finding.severity,
                 confidence=finding.confidence,
-                agent=finding.agent,
-                wcag_criterion=finding.wcag_criterion,
-                root_cause=self._extract_root_cause(finding),
-                impact=self._assess_impact(finding),
-                priority=self._calculate_priority(finding),
-                status="open",
                 occurrences=[finding],
-                created_at=datetime.now(),
-                updated_at=datetime.now()
+                wcag_criterion=finding.wcag_criterion
             )
             
             # Find similar findings
@@ -89,7 +87,7 @@ class ClusterFindingsService:
         # Group by agent and WCAG criterion
         grouped = {}
         for finding in findings:
-            key = (finding.agent, finding.wcag_criterion)
+            key = (finding.agent or 'unknown', finding.wcag_criterion)
             if key not in grouped:
                 grouped[key] = []
             grouped[key].append(finding)
@@ -104,19 +102,17 @@ class ClusterFindingsService:
             
             cluster = Cluster(
                 id=generate_id(),
-                title=self._generate_cluster_title(template),
-                description=self._generate_cluster_description(template),
+                criterion=template.criterion,
+                key=ClusterKey(
+                    criterion=template.criterion,
+                    key_components={"selector": template.selector, "agent": agent},
+                    root_cause=self._extract_root_cause(template)
+                ),
+                summary=self._generate_cluster_title(template),
                 severity=self._get_highest_severity(group_findings),
                 confidence=self._get_highest_confidence(group_findings),
-                agent=agent,
-                wcag_criterion=wcag_criterion,
-                root_cause=self._extract_root_cause(template),
-                impact=self._assess_impact(template),
-                priority=self._calculate_priority(template),
-                status="open",
                 occurrences=group_findings,
-                created_at=datetime.now(),
-                updated_at=datetime.now()
+                wcag_criterion=wcag_criterion
             )
             clusters.append(cluster)
         
@@ -179,7 +175,7 @@ class ClusterFindingsService:
             similarity += 0.2
         
         # Element similarity
-        if finding1.element == finding2.element:
+        if finding1.selector == finding2.selector:
             similarity += 0.2
         
         return similarity
@@ -194,7 +190,7 @@ class ClusterFindingsService:
         similarity = 0.0
         
         # Agent similarity
-        if cluster1.agent == cluster2.agent:
+        if cluster1.occurrences[0].agent == cluster2.occurrences[0].agent:
             similarity += 0.3
         
         # WCAG criterion similarity
@@ -213,18 +209,18 @@ class ClusterFindingsService:
     
     def _generate_cluster_title(self, finding: Finding) -> str:
         """Generate a cluster title from a finding"""
-        if finding.element:
-            return f"{finding.element} {finding.wcag_criterion} issues"
+        if finding.selector:
+            return f"{finding.selector} {finding.wcag_criterion} issues"
         return f"{finding.wcag_criterion} accessibility issues"
     
     def _generate_cluster_description(self, finding: Finding) -> str:
         """Generate a cluster description from a finding"""
-        return f"Multiple instances of {finding.wcag_criterion} violations found in {finding.agent} analysis"
+        return f"Multiple instances of {finding.wcag_criterion} violations found in {finding.agent or 'unknown'} analysis"
     
     def _extract_root_cause(self, finding: Finding) -> str:
         """Extract root cause from finding"""
-        if finding.element:
-            return f"Missing or incorrect {finding.element} implementation"
+        if finding.selector:
+            return f"Missing or incorrect {finding.selector} implementation"
         return f"WCAG {finding.wcag_criterion} compliance issue"
     
     def _assess_impact(self, finding: Finding) -> str:
@@ -370,19 +366,17 @@ class ClusterFindingsService:
                 
             new_cluster = Cluster(
                 id=generate_id(),
-                title=f"{cluster.title} - {key}",
-                description=f"Split from cluster {cluster_id}",
+                criterion=cluster.criterion,
+                key=ClusterKey(
+                    criterion=cluster.criterion,
+                    key_components={**cluster.key.key_components, "split_key": key},
+                    root_cause=cluster.key.root_cause
+                ),
+                summary=f"{cluster.summary} - {key}",
                 severity=cluster.severity,
                 confidence=cluster.confidence,
-                agent=cluster.agent,
-                wcag_criterion=cluster.wcag_criterion,
-                root_cause=cluster.root_cause,
-                impact=cluster.impact,
-                priority=cluster.priority,
-                status=cluster.status,
                 occurrences=findings,
-                created_at=datetime.now(),
-                updated_at=datetime.now()
+                wcag_criterion=cluster.wcag_criterion
             )
             new_clusters.append(new_cluster)
             self.clusters[new_cluster.id] = new_cluster
@@ -394,8 +388,8 @@ class ClusterFindingsService:
     
     def _get_split_key(self, finding: Finding, criteria: Dict[str, Any]) -> str:
         """Get split key for a finding based on criteria"""
-        if "element" in criteria:
-            return finding.element or "unknown"
+        if "selector" in criteria:
+            return finding.selector or "unknown"
         elif "severity" in criteria:
             return finding.severity
         elif "confidence" in criteria:

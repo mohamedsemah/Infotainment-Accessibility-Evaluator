@@ -50,9 +50,12 @@ class SuperAgent:
             for group in plan.parallel_groups:
                 await self._execute_agent_group(group, upload_path, plan.upload_id, execution_results)
             
-            # Collect all findings
+            # Collect all findings and set agent names
             self.all_findings = []
-            for result in execution_results['results'].values():
+            for agent_name, result in execution_results['results'].items():
+                # Set agent name on all findings
+                for finding in result.findings:
+                    finding.agent = agent_name
                 self.all_findings.extend(result.findings)
             
             # Run TriageAgent to cluster findings

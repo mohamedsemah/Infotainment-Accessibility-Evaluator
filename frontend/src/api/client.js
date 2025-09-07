@@ -201,6 +201,34 @@ class ApiClient {
     return ws;
   }
 
+  // Analysis endpoints
+  async analyzeUpload(uploadId) {
+    return this.request(`/api/analyze?upload_id=${uploadId}`);
+  }
+
+  async createPlan(uploadId, analysisResult) {
+    return this.request(`/api/plan?upload_id=${uploadId}`, {
+      method: 'POST'
+    });
+  }
+
+  async runAgents(uploadId, plan) {
+    return this.request(`/api/run?upload_id=${uploadId}`, {
+      method: 'POST'
+    });
+  }
+
+  async clusterFindings(findings) {
+    return this.request('/api/cluster', {
+      method: 'POST',
+      body: JSON.stringify({
+        findings: findings,
+        clustering_method: 'semantic',
+        similarity_threshold: 0.7
+      })
+    });
+  }
+
   // Utility methods
   async healthCheck() {
     try {

@@ -14,14 +14,13 @@ router = APIRouter()
 
 @router.post("/plan", response_model=AgentPlan)
 async def create_agent_plan(
-    upload_id: str,
-    analysis_summary: AnalysisSummary = None
+    upload_id: str = Query(..., description="Upload ID to create plan for")
 ):
     """Create an execution plan for Special Agents."""
     try:
-        # Get analysis summary if not provided
-        if not analysis_summary:
-            analysis_summary = await analyze_upload(upload_id)
+        print(f"DEBUG: Plan request - upload_id: {upload_id}")
+        # Get analysis summary
+        analysis_summary = await analyze_upload(upload_id)
         
         # Determine which agents to run based on issues found
         agents_to_run = []
@@ -80,6 +79,8 @@ async def create_agent_plan(
         return plan
         
     except Exception as e:
+        print(f"DEBUG: Plan creation error: {str(e)}")
+        print(f"DEBUG: Error type: {type(e)}")
         raise HTTPException(
             status_code=500,
             detail={

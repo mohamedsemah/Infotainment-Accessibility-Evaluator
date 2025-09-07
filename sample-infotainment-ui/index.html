@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Infotainment System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- ISSUE: Missing main landmark -->
+    <div class="container">
+        <!-- ISSUE: No heading hierarchy, h1 missing -->
+        <h2>Navigation System</h2>
+        
+        <!-- ISSUE: No form labels, poor contrast -->
+        <div class="search-section">
+            <input type="text" placeholder="Enter destination" id="search-input">
+            <button onclick="searchDestination()">Search</button>
+        </div>
+
+        <!-- ISSUE: No ARIA labels, poor color contrast -->
+        <div class="media-player">
+            <h3>Media Player</h3>
+            <div class="controls">
+                <button class="play-btn" onclick="togglePlay()">▶</button>
+                <button class="prev-btn" onclick="previousTrack()">⏮</button>
+                <button class="next-btn" onclick="nextTrack()">⏭</button>
+                <div class="volume-slider">
+                    <input type="range" min="0" max="100" value="50" id="volume">
+                </div>
+            </div>
+            <div class="track-info">
+                <span class="track-title">Current Song Title</span>
+                <span class="artist">Artist Name</span>
+            </div>
+        </div>
+
+        <!-- ISSUE: Flashing content, no seizure safety -->
+        <div class="status-indicators">
+            <div class="indicator wifi" style="animation: blink 0.5s infinite;">WiFi</div>
+            <div class="indicator bluetooth" style="animation: pulse 1s infinite;">Bluetooth</div>
+            <div class="indicator gps" style="animation: flash 0.3s infinite;">GPS</div>
+        </div>
+
+        <!-- ISSUE: No keyboard navigation, missing focus management -->
+        <div class="menu-grid">
+            <div class="menu-item" tabindex="0" onclick="openApp('navigation')">
+                <img src="images/nav-icon.png" alt="">
+                <span>Navigation</span>
+            </div>
+            <div class="menu-item" tabindex="0" onclick="openApp('music')">
+                <img src="images/music-icon.png" alt="">
+                <span>Music</span>
+            </div>
+            <div class="menu-item" tabindex="0" onclick="openApp('phone')">
+                <img src="images/phone-icon.png" alt="">
+                <span>Phone</span>
+            </div>
+            <div class="menu-item" tabindex="0" onclick="openApp('settings')">
+                <img src="images/settings-icon.png" alt="">
+                <span>Settings</span>
+            </div>
+        </div>
+
+        <!-- ISSUE: Poor contrast, no focus indicators -->
+        <div class="climate-control">
+            <h3>Climate Control</h3>
+            <div class="temp-display">
+                <span class="temp-value">72°F</span>
+                <div class="temp-controls">
+                    <button onclick="increaseTemp()">+</button>
+                    <button onclick="decreaseTemp()">-</button>
+                </div>
+            </div>
+            <div class="fan-controls">
+                <label>Fan Speed</label>
+                <input type="range" min="0" max="5" value="2" id="fan-speed">
+            </div>
+        </div>
+
+        <!-- ISSUE: No language declaration for dynamic content -->
+        <div class="notifications">
+            <div class="notification" id="notification-1">
+                <span class="notification-text">New message from John</span>
+                <button onclick="dismissNotification(1)">×</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ISSUE: No skip links, no focus management -->
+    <script src="script.js"></script>
+</body>
+</html>

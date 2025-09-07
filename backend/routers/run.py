@@ -25,8 +25,7 @@ def get_super_agent() -> SuperAgent:
 
 @router.post("/run", response_model=Dict[str, Any])
 async def run_agents(
-    upload_id: str = Query(..., description="Upload ID to analyze"),
-    plan: AgentPlan = None
+    upload_id: str = Query(..., description="Upload ID to analyze")
 ):
     """Run agents according to a plan."""
     try:
@@ -35,9 +34,9 @@ async def run_agents(
         if not upload_path:
             raise HTTPException(status_code=404, detail="Upload not found")
         
-        # Get or create plan
-        if not plan:
-            plan = await create_agent_plan(upload_id)
+        # Create plan
+        from routers.plan import create_agent_plan
+        plan = await create_agent_plan(upload_id)
         
         # Get SuperAgent
         agent = get_super_agent()
