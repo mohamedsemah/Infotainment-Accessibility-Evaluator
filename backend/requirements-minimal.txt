@@ -1,0 +1,46 @@
+# Core FastAPI dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Data validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Template engine
+jinja2==3.1.2
+
+# Image processing
+pillow==10.1.0
+
+# HTML/XML parsing
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# CSS parsing
+tinycss2==1.2.1
+
+# File monitoring
+watchdog==3.0.0
+
+# WebSocket support
+websockets==12.0
+
+# HTTP client
+httpx==0.25.2
+
+# Database
+sqlalchemy==2.0.23
+
+# PDF generation
+reportlab==4.0.7
+
+# CSV handling
+pandas==2.1.4
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+
+# Development
+python-dotenv==1.0.0

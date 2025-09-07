@@ -1,0 +1,62 @@
+# FastAPI and web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Data validation and serialization
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Template engine
+jinja2==3.1.2
+
+# Image processing
+pillow==10.1.0
+
+# CSS parsing and processing
+tinycss2==1.2.1
+cssutils==2.7.1
+
+# XML/HTML parsing
+lxml==4.9.3
+beautifulsoup4==4.12.2
+
+# File system monitoring
+watchdog==3.0.0
+
+# WebSocket support
+websockets==12.0
+
+# HTTP client
+httpx==0.25.2
+
+# Redis client
+redis==5.0.1
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.13.1
+
+# PDF generation
+reportlab==4.0.7
+
+# CSV handling
+pandas==2.3.2
+
+# Color processing
+colorthief==0.2.1
+
+# Language detection
+langdetect==1.0.9
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# Code quality
+ruff==0.1.7
+black==23.11.0
+
+# Development
+python-dotenv==1.0.0
