@@ -15,14 +15,21 @@ from utils.aria_maps import (
     get_optional_attributes_for_role, get_prohibited_attributes_for_role
 )
 from utils.id_gen import generate_finding_id
+from services.agents.base_agent import BaseAgent
 
-class ARIAAgent:
+class ARIAAgent(BaseAgent):
     """Agent responsible for evaluating ARIA attribute compliance."""
     
     def __init__(self):
+        super().__init__(
+            name="ARIAAgent",
+            description="Evaluates ARIA attribute compliance for WCAG 2.2",
+            criterion=CriterionType.ARIA,
+            wcag_criterion="4.1.2"
+        )
         self.findings = []
     
-    async def analyze(self, upload_path: str, upload_id: str) -> List[Finding]:
+    async def analyze(self, upload_path: str) -> List[Finding]:
         """Analyze uploaded files for ARIA attribute issues."""
         self.findings = []
         

@@ -14,6 +14,30 @@ from services.agents.special.aria_agent import ARIAAgent
 from services.agents.special.state_explorer_agent import StateExplorerAgent
 from services.agents.special.triage_agent import TriageAgent
 from services.agents.special.token_harmonizer_agent import TokenHarmonizerAgent
+
+# Perceivable Agents
+from services.agents.special.alt_text_agent import AltTextAgent
+from services.agents.special.media_agent import MediaAgent
+from services.agents.special.layout_agent import LayoutAgent
+from services.agents.special.sensory_agent import SensoryAgent
+
+# Operable Agents
+from services.agents.special.keyboard_navigation_agent import KeyboardNavigationAgent
+from services.agents.special.focus_agent import FocusAgent
+from services.agents.special.timing_agent import TimingAgent
+from services.agents.special.gesture_agent import GestureAgent
+from services.agents.special.navigation_consistency_agent import NavigationConsistencyAgent
+
+# Understandable Agents
+from services.agents.special.predictability_agent import PredictabilityAgent
+from services.agents.special.error_prevention_agent import ErrorPreventionAgent
+from services.agents.special.readability_agent import ReadabilityAgent
+from services.agents.special.input_assistance_agent import InputAssistanceAgent
+
+# Robust Agents
+from services.agents.special.semantic_structure_agent import SemanticStructureAgent
+from services.agents.special.compatibility_agent import CompatibilityAgent
+from services.agents.special.assistive_tech_simulation_agent import AssistiveTechSimulationAgent
 from utils.id_gen import generate_agent_id
 
 class SuperAgent:
@@ -22,13 +46,38 @@ class SuperAgent:
     def __init__(self, connection_manager=None):
         self.connection_manager = connection_manager
         self.agents = {
+            # Original agents
             'ContrastAgent': ContrastAgent(),
             'SeizureSafeAgent': SeizureSafeAgent(),
             'LanguageAgent': LanguageAgent(),
             'ARIAAgent': ARIAAgent(),
             'StateExplorerAgent': StateExplorerAgent(),
             'TriageAgent': TriageAgent(),
-            'TokenHarmonizerAgent': TokenHarmonizerAgent()
+            'TokenHarmonizerAgent': TokenHarmonizerAgent(),
+            
+            # Perceivable Agents
+            'AltTextAgent': AltTextAgent(),
+            'MediaAgent': MediaAgent(),
+            'LayoutAgent': LayoutAgent(),
+            'SensoryAgent': SensoryAgent(),
+            
+            # Operable Agents
+            'KeyboardNavigationAgent': KeyboardNavigationAgent(),
+            'FocusAgent': FocusAgent(),
+            'TimingAgent': TimingAgent(),
+            'GestureAgent': GestureAgent(),
+            'NavigationConsistencyAgent': NavigationConsistencyAgent(),
+            
+            # Understandable Agents
+            'PredictabilityAgent': PredictabilityAgent(),
+            'ErrorPreventionAgent': ErrorPreventionAgent(),
+            'ReadabilityAgent': ReadabilityAgent(),
+            'InputAssistanceAgent': InputAssistanceAgent(),
+            
+            # Robust Agents
+            'SemanticStructureAgent': SemanticStructureAgent(),
+            'CompatibilityAgent': CompatibilityAgent(),
+            'AssistiveTechSimulationAgent': AssistiveTechSimulationAgent()
         }
         self.results = {}
         self.all_findings = []
@@ -133,7 +182,7 @@ class SuperAgent:
             else:
                 # Other agents analyze the upload
                 print(f"DEBUG: {agent_name} analyzing upload path: {upload_path}")
-                result = await agent.analyze(upload_path, upload_id)
+                result = await agent.analyze(upload_path)
             
             print(f"DEBUG: {agent_name} returned {len(result) if isinstance(result, list) else 'non-list'} results")
             
@@ -243,6 +292,7 @@ class SuperAgent:
     async def get_agent_capabilities(self) -> Dict[str, Any]:
         """Get capabilities of all agents."""
         capabilities = {
+            # Original agents
             'ContrastAgent': {
                 'description': 'Evaluates color contrast compliance',
                 'criteria': ['1.4.3', '1.4.6', '1.4.11'],
@@ -284,6 +334,110 @@ class SuperAgent:
                 'criteria': ['all'],
                 'input_types': ['clusters'],
                 'output_types': ['patches']
+            },
+            
+            # Perceivable Agents
+            'AltTextAgent': {
+                'description': 'Detects missing or inadequate alt text',
+                'criteria': ['1.1.1'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'MediaAgent': {
+                'description': 'Detects media accessibility issues',
+                'criteria': ['1.2.1', '1.2.2', '1.2.3'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'LayoutAgent': {
+                'description': 'Detects layout and structure issues',
+                'criteria': ['1.3.1', '1.3.2'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'SensoryAgent': {
+                'description': 'Detects sensory accessibility issues',
+                'criteria': ['1.4.1', '1.4.2'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            
+            # Operable Agents
+            'KeyboardNavigationAgent': {
+                'description': 'Detects keyboard navigation issues',
+                'criteria': ['2.1.1', '2.1.2'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'FocusAgent': {
+                'description': 'Detects focus management issues',
+                'criteria': ['2.4.7'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'TimingAgent': {
+                'description': 'Detects timing-related issues',
+                'criteria': ['2.2.1', '2.2.2'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'GestureAgent': {
+                'description': 'Detects gesture accessibility issues',
+                'criteria': ['2.5.1', '2.5.2'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'NavigationConsistencyAgent': {
+                'description': 'Detects navigation consistency issues',
+                'criteria': ['3.2.3'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            
+            # Understandable Agents
+            'PredictabilityAgent': {
+                'description': 'Detects predictability issues',
+                'criteria': ['3.2.1', '3.2.2'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'ErrorPreventionAgent': {
+                'description': 'Detects error prevention issues',
+                'criteria': ['3.3.4', '3.3.6'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'ReadabilityAgent': {
+                'description': 'Detects readability issues',
+                'criteria': ['3.1.5'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'InputAssistanceAgent': {
+                'description': 'Detects input assistance issues',
+                'criteria': ['3.3.5'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            
+            # Robust Agents
+            'SemanticStructureAgent': {
+                'description': 'Detects semantic structure issues',
+                'criteria': ['4.1.1'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'CompatibilityAgent': {
+                'description': 'Detects compatibility issues',
+                'criteria': ['4.1.2'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
+            },
+            'AssistiveTechSimulationAgent': {
+                'description': 'Simulates assistive technology behavior',
+                'criteria': ['4.1.3'],
+                'input_types': ['html'],
+                'output_types': ['findings', 'suggestions']
             }
         }
         

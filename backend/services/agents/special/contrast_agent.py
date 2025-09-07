@@ -15,16 +15,23 @@ from utils.contrast_ratio import evaluate_contrast, evaluate_non_text_contrast, 
 from utils.color_math import parse_css_color, RGB, get_contrast_suggestions
 from utils.wcag_constants import CONTRAST_THRESHOLDS, WCAGLevel
 from utils.id_gen import generate_finding_id
+from services.agents.base_agent import BaseAgent
 
-class ContrastAgent:
+class ContrastAgent(BaseAgent):
     """Agent responsible for evaluating color contrast compliance."""
     
     def __init__(self, wcag_level: WCAGLevel = WCAGLevel.AA):
+        super().__init__(
+            name="ContrastAgent",
+            description="Evaluates color contrast compliance for WCAG 2.2",
+            criterion=CriterionType.CONTRAST,
+            wcag_criterion="1.4.3"
+        )
         self.wcag_level = wcag_level
         self.thresholds = CONTRAST_THRESHOLDS[wcag_level]
         self.findings = []
     
-    async def analyze(self, upload_path: str, upload_id: str) -> List[Finding]:
+    async def analyze(self, upload_path: str) -> List[Finding]:
         """Analyze uploaded files for contrast issues."""
         self.findings = []
         
