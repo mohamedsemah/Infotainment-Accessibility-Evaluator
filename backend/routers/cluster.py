@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from typing import List
 from models.schemas import Finding, Cluster, ClusterRequest, ClusterResponse
 from services.clustering.cluster_findings import ClusterFindingsService
+from routers.report import store_analysis_results
 import logging
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,12 @@ async def cluster_findings(
         for cluster in clusters:
             agent = cluster.occurrences[0].agent if cluster.occurrences else 'unknown'
             agent_counts[agent] = agent_counts.get(agent, 0) + len(cluster.occurrences)
+        
+        # Store analysis results for report generation
+        # Convert clusters to dict format for storage
+        clusters_dict = [cluster.dict() for cluster in clusters]
+        findings_dict = [finding.dict() for finding in request.findings]
+        store_analysis_results(request.upload_id, clusters_dict, findings_dict)
         
         response = ClusterResponse(
             clusters=clusters,

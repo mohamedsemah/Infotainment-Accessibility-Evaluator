@@ -26,14 +26,19 @@ class LanguageAgent:
         html_files = self._find_files(upload_path, ['.html', '.htm', '.xhtml'])
         qml_files = self._find_files(upload_path, ['.qml'])
         
+        print(f"DEBUG: LanguageAgent found {len(html_files)} HTML, {len(qml_files)} QML files")
+        
         # Analyze HTML files
         for html_file in html_files:
+            print(f"DEBUG: LanguageAgent analyzing HTML: {html_file}")
             await self._analyze_html_file(html_file, upload_path)
         
         # Analyze QML files
         for qml_file in qml_files:
+            print(f"DEBUG: LanguageAgent analyzing QML: {qml_file}")
             await self._analyze_qml_file(qml_file, upload_path)
         
+        print(f"DEBUG: LanguageAgent found {len(self.findings)} language issues")
         return self.findings
     
     def _find_files(self, upload_path: str, extensions: List[str]) -> List[str]:

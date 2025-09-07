@@ -182,6 +182,7 @@ class ErrorResponse(BaseModel):
 class ClusterRequest(BaseModel):
     """Request for clustering findings"""
     findings: List[Finding]
+    upload_id: str
     clustering_method: str = "semantic"  # semantic, rule_based, hybrid
     similarity_threshold: float = 0.7
 

@@ -59,7 +59,7 @@ class ARIAAgent:
             relative_path = os.path.relpath(file_path, upload_path)
             
             # Find all elements with ARIA attributes
-            aria_elements = soup.find_all(attrs=lambda x: x and any(attr.startswith('aria-') for attr in x.keys()))
+            aria_elements = soup.find_all(attrs=lambda x: x and isinstance(x, dict) and any(attr.startswith('aria-') for attr in x.keys()))
             
             for element in aria_elements:
                 await self._analyze_element_aria(element, relative_path, file_path)

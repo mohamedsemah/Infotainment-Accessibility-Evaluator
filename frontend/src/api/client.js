@@ -115,10 +115,15 @@ class ApiClient {
   }
 
   // Clustering endpoints
-  async clusterFindings(findings) {
+  async clusterFindings(findings, uploadId) {
     return this.request('/api/cluster', {
       method: 'POST',
-      body: JSON.stringify({ findings }),
+      body: JSON.stringify({ 
+        findings, 
+        upload_id: uploadId,
+        clustering_method: 'semantic',
+        similarity_threshold: 0.7
+      }),
     });
   }
 
@@ -218,16 +223,6 @@ class ApiClient {
     });
   }
 
-  async clusterFindings(findings) {
-    return this.request('/api/cluster', {
-      method: 'POST',
-      body: JSON.stringify({
-        findings: findings,
-        clustering_method: 'semantic',
-        similarity_threshold: 0.7
-      })
-    });
-  }
 
   // Utility methods
   async healthCheck() {

@@ -68,7 +68,7 @@ const ResultsPage = () => {
       console.log('Findings to cluster:', findings);
       console.log('Findings count:', findings.length);
       
-      const clusters = await apiClient.clusterFindings(findings);
+      const clusters = await apiClient.clusterFindings(findings, uploadId);
       console.log('Clustered findings:', clusters);
       
       // Update store with results
@@ -100,9 +100,12 @@ const ResultsPage = () => {
 
   const handleGenerateReport = async () => {
     try {
+      console.log('Generating report for upload:', uploadId);
       await apiClient.downloadReport(uploadId, 'html');
+      console.log('Report generated successfully');
     } catch (error) {
       console.error('Failed to generate report:', error);
+      setError(`Failed to generate report: ${error.message}`);
     }
   };
 

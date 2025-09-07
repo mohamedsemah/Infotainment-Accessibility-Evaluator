@@ -10,125 +10,71 @@ from jinja2 import Template
 async def generate_html_report(upload_id: str, upload_path: str, include_patches: bool = True) -> str:
     """Generate HTML accessibility report."""
     
-    # Mock data - in production, this would fetch from database
+    # Import here to avoid circular imports
+    from routers.report import get_analysis_results
+    
+    # Get real analysis data
+    analysis_data = get_analysis_results(upload_id)
+    clusters = analysis_data.get('clusters', [])
+    findings = analysis_data.get('findings', [])
+    
+    # Calculate totals from real data
+    total_findings = sum(len(cluster.get('occurrences', [])) for cluster in clusters)
+    total_clusters = len(clusters)
+    
+    # Calculate WCAG compliance from real data
+    wcag_compliance = {
+        "A": {"total": 0, "passed": 0, "failed": 0},
+        "AA": {"total": 0, "passed": 0, "failed": 0},
+        "AAA": {"total": 0, "passed": 0, "failed": 0}
+    }
+    
+    # Count findings by WCAG level
+    for finding in findings:
+        wcag_criterion = finding.get('wcag_criterion', 'N/A')
+        if wcag_criterion.startswith('1.'):
+            wcag_compliance["A"]["total"] += 1
+            wcag_compliance["A"]["failed"] += 1
+        elif wcag_criterion.startswith('2.') or wcag_criterion.startswith('3.'):
+            wcag_compliance["AA"]["total"] += 1
+            wcag_compliance["AA"]["failed"] += 1
+        elif wcag_criterion.startswith('4.'):
+            wcag_compliance["AAA"]["total"] += 1
+            wcag_compliance["AAA"]["failed"] += 1
+    
+    # Calculate overall score (simplified)
+    total_issues = sum(level["failed"] for level in wcag_compliance.values())
+    total_checks = sum(level["total"] for level in wcag_compliance.values())
+    overall_score = max(0, 100 - (total_issues * 10)) if total_checks > 0 else 100
+    
+    # Generate recommendations based on findings
+    recommendations = []
+    if any(f.get('criterion') == 'contrast' for f in findings):
+        recommendations.append("Fix color contrast issues for better readability")
+    if any(f.get('criterion') == 'aria' for f in findings):
+        recommendations.append("Add proper ARIA labels to interactive elements")
+    if any(f.get('criterion') == 'language' for f in findings):
+        recommendations.append("Add language attributes to HTML elements")
+    if any(f.get('criterion') == 'seizure_safe' for f in findings):
+        recommendations.append("Ensure animations respect user preferences")
+    if not recommendations:
+        recommendations.append("Implement keyboard navigation support")
+    
     report_data = {
         "upload_id": upload_id,
         "timestamp": datetime.now().isoformat(),
         "summary": {
-            "total_findings": 15,
-            "total_clusters": 8,
-            "total_patches": 5,
+            "total_findings": total_findings,
+            "total_clusters": total_clusters,
+            "total_patches": 0,  # No patches generated yet
             "compliance_level": "AA",
-            "overall_score": 75
+            "overall_score": overall_score
         },
-        "findings": [
-            {
-                "id": "finding-1",
-                "criterion": "contrast",
-                "severity": "high",
-                "wcag_criterion": "1.4.3",
-                "description": "Contrast ratio 2.1:1 below required 4.5:1",
-                "file_path": "index.html",
-                "line_number": 15,
-                "selector": ".header-text"
-            },
-            {
-                "id": "finding-2",
-                "criterion": "seizure_safe",
-                "severity": "critical",
-                "wcag_criterion": "2.3.1",
-                "description": "Animation exceeds 3 flashes per second",
-                "file_path": "styles.css",
-                "line_number": 42,
-                "selector": ".animated-banner"
-            },
-            {
-                "id": "finding-3",
-                "criterion": "language",
-                "severity": "medium",
-                "wcag_criterion": "3.1.1",
-                "description": "Missing lang attribute on html element",
-                "file_path": "index.html",
-                "line_number": 1,
-                "selector": "html"
-            },
-            {
-                "id": "finding-4",
-                "criterion": "aria",
-                "severity": "high",
-                "wcag_criterion": "4.1.2",
-                "description": "Button missing aria-label",
-                "file_path": "index.html",
-                "line_number": 28,
-                "selector": ".submit-button"
-            },
-            {
-                "id": "finding-5",
-                "criterion": "state_explorer",
-                "severity": "medium",
-                "wcag_criterion": "2.4.7",
-                "description": "Missing focus styles",
-                "file_path": "styles.css",
-                "line_number": 15,
-                "selector": ".interactive-element"
-            }
-        ],
-        "clusters": [
-            {
-                "id": "cluster-1",
-                "criterion": "contrast",
-                "summary": "Multiple contrast issues with blue text on white background",
-                "severity": "high",
-                "occurrences": 5,
-                "wcag_criterion": "1.4.3"
-            },
-            {
-                "id": "cluster-2",
-                "criterion": "seizure_safe",
-                "summary": "Animation frequency exceeds safe threshold",
-                "severity": "critical",
-                "occurrences": 2,
-                "wcag_criterion": "2.3.1"
-            },
-            {
-                "id": "cluster-3",
-                "criterion": "language",
-                "summary": "Missing language attributes",
-                "severity": "medium",
-                "occurrences": 3,
-                "wcag_criterion": "3.1.1"
-            }
-        ],
-        "patches": [
-            {
-                "id": "patch-1",
-                "type": "css_update",
-                "file_path": "contrast-fixes.css",
-                "rationale": "Fix contrast ratio for blue text",
-                "risks": ["May affect other elements"],
-                "confidence": "high"
-            },
-            {
-                "id": "patch-2",
-                "type": "css_update",
-                "file_path": "animation-fixes.css",
-                "rationale": "Reduce animation frequency to safe levels",
-                "risks": ["May affect animation timing"],
-                "confidence": "high"
-            }
-        ] if include_patches else [],
-        "wcag_compliance": {
-            "A": {"total": 25, "passed": 20, "failed": 5},
-            "AA": {"total": 15, "passed": 10, "failed": 5},
-            "AAA": {"total": 8, "passed": 3, "failed": 5}
-        },
-        "recommendations": [
-            "Fix color contrast issues for better readability",
-            "Add proper ARIA labels to interactive elements",
-            "Implement keyboard navigation support",
-            "Add language attributes to HTML elements",
-            "Ensure animations respect user preferences"
-        ]
+        "findings": findings,
+        "clusters": clusters,
+        "patches": [],  # No patches generated yet
+        "wcag_compliance": wcag_compliance,
+        "recommendations": recommendations
     }
     
     # Load HTML template

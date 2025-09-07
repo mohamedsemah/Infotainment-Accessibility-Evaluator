@@ -25,7 +25,22 @@ router = APIRouter()
 # In-memory storage for reports (in production, use a database)
 reports_storage = {}
 
-@router.get("/report", response_model=Report)
+# In-memory storage for analysis results (in production, use a database)
+analysis_storage = {}
+
+def store_analysis_results(upload_id: str, clusters: List[Dict[str, Any]], findings: List[Dict[str, Any]]):
+    """Store analysis results for report generation."""
+    analysis_storage[upload_id] = {
+        'clusters': clusters,
+        'findings': findings,
+        'timestamp': datetime.now()
+    }
+
+def get_analysis_results(upload_id: str) -> Dict[str, Any]:
+    """Get stored analysis results."""
+    return analysis_storage.get(upload_id, {'clusters': [], 'findings': []})
+
+@router.get("/report")
 async def generate_report(
     upload_id: str = Query(..., description="Upload ID to report on"),
     format: str = Query("html", description="Report format (html, pdf, csv, json)"),
@@ -40,13 +55,25 @@ async def generate_report(
         
         # Generate report based on format
         if format == "html":
-            return await _generate_html_report(upload_id, upload_path, include_patches)
+            html_content = await generate_html_report(upload_id, upload_path, include_patches)
+            return HTMLResponse(content=html_content, media_type="text/html")
         elif format == "pdf":
-            return await _generate_pdf_report(upload_id, upload_path, include_patches)
+            pdf_path = await _generate_pdf_report(upload_id, upload_path, include_patches)
+            return FileResponse(
+                path=pdf_path,
+                media_type="application/pdf",
+                filename=f"accessibility-report-{upload_id}.pdf"
+            )
         elif format == "csv":
-            return await _generate_csv_report(upload_id, upload_path, include_patches)
+            csv_path = await _generate_csv_report(upload_id, upload_path, include_patches)
+            return FileResponse(
+                path=csv_path,
+                media_type="text/csv",
+                filename=f"accessibility-report-{upload_id}.csv"
+            )
         elif format == "json":
-            return await _generate_json_report(upload_id, upload_path, include_patches)
+            json_data = await _generate_json_report(upload_id, upload_path, include_patches)
+            return json_data
         else:
             raise HTTPException(status_code=400, detail="Invalid format. Use: html, pdf, csv, json")
         
@@ -229,19 +256,18 @@ async def get_report_summary(upload_id: str):
 
 async def _generate_html_report(upload_id: str, upload_path: str, include_patches: bool) -> Report:
     """Generate HTML report."""
-    # This would typically fetch data from a database
-    # For now, create a mock report
-    
     report_id = generate_report_id()
     
-    # Mock data
-    clusters = []
-    patches = []
+    # Get real analysis data
+    analysis_data = get_analysis_results(upload_id)
+    clusters = analysis_data.get('clusters', [])
+    findings = analysis_data.get('findings', [])
     
+    patches = []
     if include_patches and upload_id in patches_storage:
         patches = patches_storage[upload_id].patches
     
-    # Calculate totals
+    # Calculate totals from real data
     total_findings = sum(len(cluster.get('occurrences', [])) for cluster in clusters)
     total_clusters = len(clusters)
     total_patches = len(patches)
