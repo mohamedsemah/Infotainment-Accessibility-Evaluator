@@ -128,22 +128,21 @@ class ApiClient {
   }
 
   // Patching endpoints
-  async generatePatches(clusters) {
-    return this.request('/api/patch', {
+  async generatePatches(uploadId) {
+    return this.request(`/api/patch?upload_id=${uploadId}`, {
       method: 'POST',
-      body: JSON.stringify({ clusters }),
     });
   }
 
-  async applyPatches(patches) {
+  async applyPatches(uploadId, patches) {
     return this.request('/api/apply', {
       method: 'POST',
-      body: JSON.stringify({ patches }),
+      body: JSON.stringify({ upload_id: uploadId, patches }),
     });
   }
 
   // Sandbox endpoints
-  async recheckSandbox(uploadId) {
+  async recheckPatches(uploadId) {
     return this.request('/api/recheck', {
       method: 'POST',
       body: JSON.stringify({ upload_id: uploadId }),

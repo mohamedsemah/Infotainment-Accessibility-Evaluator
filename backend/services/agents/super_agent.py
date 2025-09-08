@@ -7,6 +7,10 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from models.schemas import AgentPlan, AgentResult, Finding, Cluster, ProgressEvent
+from routers.progress import (
+    send_agent_start, send_agent_progress, send_agent_complete, 
+    send_agent_error, send_analysis_start, send_analysis_complete
+)
 from services.agents.special.contrast_agent import ContrastAgent
 from services.agents.special.seizure_safe_agent import SeizureSafeAgent
 from services.agents.special.language_agent import LanguageAgent
@@ -95,6 +99,9 @@ class SuperAgent:
         }
         
         try:
+            # Send analysis start event
+            await send_analysis_start(plan.upload_id, "Starting accessibility analysis")
+            
             # Execute agents in parallel groups
             for group in plan.parallel_groups:
                 await self._execute_agent_group(group, upload_path, plan.upload_id, execution_results)
@@ -121,15 +128,13 @@ class SuperAgent:
                     patches = await token_agent.analyze(clusters, upload_path)
                     execution_results['patches'] = patches
             
+            # Send analysis complete event
+            await send_analysis_complete(plan.upload_id, f"Analysis completed with {len(self.all_findings)} findings")
+            
         except Exception as e:
             execution_results['success'] = False
             execution_results['errors'].append(str(e))
-            await self._send_progress_event(
-                plan.upload_id,
-                "error",
-                f"Execution failed: {str(e)}",
-                0.0
-            )
+            await send_agent_error(plan.upload_id, "SuperAgent", f"Execution failed: {str(e)}")
         
         return execution_results
     
@@ -154,28 +159,29 @@ class SuperAgent:
             agent = self.agents[agent_name]
             agent_id = generate_agent_id()
             
-            await self._send_progress_event(
-                upload_id,
-                "agent_start",
-                f"Starting {agent_name}",
-                0.0,
-                agent_name
-            )
+            # Send agent start event
+            await send_agent_start(upload_id, agent_name, f"Starting {agent_name}")
             
             start_time = datetime.now()
             
-            # Execute agent
+            # Execute agent with progress updates
             if agent_name == 'TriageAgent':
                 # TriageAgent needs findings from other agents
                 findings = execution_results.get('all_findings', [])
+                await send_agent_progress(upload_id, agent_name, 0.3, "Processing findings")
                 result = await agent.analyze(findings, upload_id)
+                await send_agent_progress(upload_id, agent_name, 0.8, "Clustering findings")
             elif agent_name == 'TokenHarmonizerAgent':
                 # TokenHarmonizerAgent needs clusters
                 clusters = execution_results.get('clusters', [])
+                await send_agent_progress(upload_id, agent_name, 0.3, "Analyzing clusters")
                 result = await agent.analyze(clusters, upload_path)
+                await send_agent_progress(upload_id, agent_name, 0.8, "Generating patches")
             else:
                 # Other agents analyze the upload
+                await send_agent_progress(upload_id, agent_name, 0.2, "Initializing analysis")
                 result = await agent.analyze(upload_path)
+                await send_agent_progress(upload_id, agent_name, 0.7, "Processing files")
             
             end_time = datetime.now()
             processing_time = (end_time - start_time).total_seconds()
@@ -190,13 +196,8 @@ class SuperAgent:
             
             execution_results['results'][agent_name] = agent_result
             
-            await self._send_progress_event(
-                upload_id,
-                "agent_complete",
-                f"Completed {agent_name}",
-                1.0,
-                agent_name
-            )
+            # Send agent completion event
+            await send_agent_complete(upload_id, agent_name, f"Completed {agent_name} - found {len(agent_result.findings)} issues")
             
         except Exception as e:
             # Create error result
@@ -211,13 +212,8 @@ class SuperAgent:
             execution_results['results'][agent_name] = agent_result
             execution_results['errors'].append(f"{agent_name}: {str(e)}")
             
-            await self._send_progress_event(
-                upload_id,
-                "agent_error",
-                f"Error in {agent_name}: {str(e)}",
-                0.0,
-                agent_name
-            )
+            # Send agent error event
+            await send_agent_error(upload_id, agent_name, str(e))
     
     async def _send_progress_event(self, upload_id: str, event_type: str, message: str, progress: float, agent_name: str = None):
         """Send progress event via WebSocket."""

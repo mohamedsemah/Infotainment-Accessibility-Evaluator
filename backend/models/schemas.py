@@ -126,6 +126,16 @@ class ClusteringResult(BaseModel):
     duplicate_ratio: float
     created_at: datetime = Field(default_factory=datetime.now)
 
+class PatchRequest(BaseModel):
+    upload_id: str
+    patches: List[Patch]
+
+class PatchResponse(BaseModel):
+    success: bool
+    message: str
+    patches: List[Patch]
+    total_patches: int
+
 class PatchResult(BaseModel):
     upload_id: str
     patches: List[Patch]
@@ -133,6 +143,10 @@ class PatchResult(BaseModel):
     safe_patches: int
     risky_patches: int
     created_at: datetime = Field(default_factory=datetime.now)
+
+class RecheckRequest(BaseModel):
+    upload_id: str
+    patch_ids: Optional[List[str]] = None
 
 class RecheckResult(BaseModel):
     upload_id: str

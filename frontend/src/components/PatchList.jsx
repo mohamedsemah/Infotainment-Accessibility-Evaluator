@@ -1,24 +1,19 @@
 import React, { useState } from 'react';
-import { 
-  Code, 
-  Download, 
-  Check, 
-  X, 
-  Eye, 
-  FileText,
-  Clock,
-  AlertCircle,
-  CheckCircle
-} from 'lucide-react';
+import { CheckCircle, XCircle, Eye, EyeOff, Download, AlertTriangle } from 'lucide-react';
 
-const PatchList = ({ 
-  patches, 
-  onApplyPatch, 
-  onRejectPatch, 
-  onViewPatch 
-}) => {
+const PatchList = ({ patches, onApplyPatch, onRejectPatch, onViewDiff }) => {
+  const [expandedPatches, setExpandedPatches] = useState(new Set());
   const [selectedPatches, setSelectedPatches] = useState(new Set());
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
+
+  const handleToggleExpanded = (patchId) => {
+    const newExpanded = new Set(expandedPatches);
+    if (newExpanded.has(patchId)) {
+      newExpanded.delete(patchId);
+    } else {
+      newExpanded.add(patchId);
+    }
+    setExpandedPatches(newExpanded);
+  };
 
   const handleSelectPatch = (patchId) => {
     const newSelected = new Set(selectedPatches);
@@ -39,286 +34,209 @@ const PatchList = ({
   };
 
   const handleApplySelected = () => {
-    const patchesToApply = patches.filter(p => selectedPatches.has(p.id));
-    patchesToApply.forEach(patch => onApplyPatch(patch));
+    selectedPatches.forEach(patchId => {
+      const patch = patches.find(p => p.id === patchId);
+      if (patch && onApplyPatch) {
+        onApplyPatch(patch);
+      }
+    });
     setSelectedPatches(new Set());
   };
 
-  const handleRejectSelected = () => {
-    const patchesToReject = patches.filter(p => selectedPatches.has(p.id));
-    patchesToReject.forEach(patch => onRejectPatch(patch));
-    setSelectedPatches(new Set());
+  const getPatchTypeColor = (type) => {
+    switch (type) {
+      case 'css_update':
+        return 'bg-purple-100 text-purple-800';
+      case 'html_update':
+        return 'bg-green-100 text-green-800';
+      case 'attribute_add':
+        return 'bg-blue-100 text-blue-800';
+      case 'attribute_remove':
+        return 'bg-red-100 text-red-800';
+      case 'content_update':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   const getConfidenceColor = (confidence) => {
     switch (confidence) {
       case 'high':
-        return 'text-success-600 bg-success-100 border-success-200';
+        return 'text-green-600';
       case 'medium':
-        return 'text-warning-600 bg-warning-100 border-warning-200';
+        return 'text-yellow-600';
       case 'low':
-        return 'text-error-600 bg-error-100 border-error-200';
+        return 'text-red-600';
       default:
-        return 'text-gray-600 bg-gray-100 border-gray-200';
+        return 'text-gray-600';
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'applied':
-        return <CheckCircle className="w-4 h-4 text-success-600" />;
-      case 'rejected':
-        return <X className="w-4 h-4 text-error-600" />;
-      case 'pending':
-        return <Clock className="w-4 h-4 text-warning-600" />;
-      default:
-        return <AlertCircle className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  if (!patches || patches.length === 0) {
+  if (patches.length === 0) {
     return (
-      <div className="card">
-        <div className="card-content p-8 text-center">
-          <Code className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No Patches Available
-          </h3>
-          <p className="text-gray-600">
-            No automated patches have been generated for the current findings.
-          </p>
-        </div>
+      <div className="text-center py-8">
+        <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No Patches Available</h3>
+        <p className="text-gray-600">
+          No accessibility fixes were generated for this upload.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="card">
-        <div className="card-header">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="card-title text-lg">Available Patches</h3>
-              <p className="card-description">
-                {patches.length} patch{patches.length !== 1 ? 'es' : ''} available for review
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                className="btn btn-outline btn-sm"
-              >
-                {viewMode === 'list' ? 'Grid View' : 'List View'}
-              </button>
-            </div>
-          </div>
+    <div className="space-y-4">
+      {/* Header Actions */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleSelectAll}
+            className="btn btn-outline btn-sm"
+          >
+            {selectedPatches.size === patches.length ? 'Deselect All' : 'Select All'}
+          </button>
+          <span className="text-sm text-gray-600">
+            {selectedPatches.size} of {patches.length} patches selected
+          </span>
         </div>
-        
-        {selectedPatches.size > 0 && (
-          <div className="card-content pt-0">
-            <div className="flex items-center justify-between p-4 bg-primary-50 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-primary-900">
-                  {selectedPatches.size} patch{selectedPatches.size !== 1 ? 'es' : ''} selected
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={handleRejectSelected}
-                  className="btn btn-outline btn-sm"
-                >
-                  <X className="w-4 h-4 mr-1" />
-                  Reject Selected
-                </button>
-                <button
-                  onClick={handleApplySelected}
-                  className="btn btn-primary btn-sm"
-                >
-                  <Check className="w-4 h-4 mr-1" />
-                  Apply Selected
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <button
+          onClick={handleApplySelected}
+          disabled={selectedPatches.size === 0}
+          className="btn btn-primary btn-sm"
+        >
+          Apply Selected ({selectedPatches.size})
+        </button>
       </div>
 
       {/* Patches List */}
-      <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}>
-        {patches.map((patch) => (
-          <div
-            key={patch.id}
-            className={`card cursor-pointer transition-all duration-200 ${
-              selectedPatches.has(patch.id) ? 'ring-2 ring-primary-500 shadow-lg' : 'hover:shadow-md'
-            }`}
-            onClick={() => handleSelectPatch(patch.id)}
-          >
-            <div className="card-content p-0">
-              {/* Header */}
-              <div className="p-4 pb-3">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center space-x-2">
+      <div className="space-y-3">
+        {patches.map((patch) => {
+          const isExpanded = expandedPatches.has(patch.id);
+          const isSelected = selectedPatches.has(patch.id);
+          const hasRisks = patch.risks && patch.risks.length > 0;
+
+          return (
+            <div
+              key={patch.id}
+              className={`bg-white rounded-lg border transition-all ${
+                isSelected ? 'ring-2 ring-primary-500 border-primary-300' : 'border-gray-200'
+              }`}
+            >
+              {/* Patch Header */}
+              <div className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-3">
                     <input
                       type="checkbox"
-                      checked={selectedPatches.has(patch.id)}
+                      checked={isSelected}
                       onChange={() => handleSelectPatch(patch.id)}
-                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                      onClick={(e) => e.stopPropagation()}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-1"
                     />
-                    <h4 className="font-medium text-gray-900 truncate">
-                      {patch.title}
-                    </h4>
-                  </div>
-                  
-                  <div className="flex items-center space-x-1">
-                    {getStatusIcon(patch.status)}
-                    <span className={`badge badge-sm ${getConfidenceColor(patch.confidence)}`}>
-                      {patch.confidence}
-                    </span>
-                  </div>
-                </div>
-                
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                  {patch.description}
-                </p>
-                
-                <div className="flex items-center space-x-4 text-xs text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <FileText className="w-3 h-3" />
-                    <span>{patch.changes_count} changes</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-3 h-3" />
-                    <span>{formatFileSize(patch.diff?.length || 0)}</span>
-                  </div>
-                  
-                  {patch.finding_id && (
-                    <div className="flex items-center space-x-1">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>Finding #{patch.finding_id}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="font-medium text-gray-900">{patch.rationale}</h3>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPatchTypeColor(patch.type)}`}>
+                          {patch.type.replace('_', ' ').toUpperCase()}
+                        </span>
+                        {hasRisks && (
+                          <span className="flex items-center text-orange-600 text-xs">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            {patch.risks.length} risk{patch.risks.length > 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600">
+                        <span>File: {patch.file_path}</span>
+                        <span className={`font-medium ${getConfidenceColor(patch.confidence)}`}>
+                          Confidence: {patch.confidence}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Actions */}
-              <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
+                  </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewPatch(patch);
-                      }}
+                      onClick={() => handleToggleExpanded(patch.id)}
                       className="btn btn-outline btn-sm"
                     >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
+                      {isExpanded ? (
+                        <>
+                          <EyeOff className="w-4 h-4 mr-1" />
+                          Hide
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
+                        </>
+                      )}
                     </button>
-                    
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const blob = new Blob([patch.diff], { type: 'text/plain' });
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `patch-${patch.id}.diff`;
-                        document.body.appendChild(a);
-                        a.click();
-                        window.URL.revokeObjectURL(url);
-                        document.body.removeChild(a);
-                      }}
-                      className="btn btn-outline btn-sm"
-                    >
-                      <Download className="w-4 h-4 mr-1" />
-                      Download
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center space-x-1">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRejectPatch(patch);
-                      }}
-                      className="btn btn-outline btn-sm text-error-600 hover:text-error-700"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                    
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onApplyPatch(patch);
-                      }}
+                      onClick={() => onApplyPatch && onApplyPatch(patch)}
                       className="btn btn-primary btn-sm"
                     >
-                      <Check className="w-4 h-4" />
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Apply
+                    </button>
+                    <button
+                      onClick={() => onRejectPatch && onRejectPatch(patch)}
+                      className="btn btn-outline btn-sm text-red-600 hover:text-red-700"
+                    >
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Reject
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Bulk Actions */}
-      {patches.length > 1 && (
-        <div className="card">
-          <div className="card-content">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={handleSelectAll}
-                  className="text-sm text-primary-600 hover:text-primary-700"
-                >
-                  {selectedPatches.size === patches.length ? 'Deselect All' : 'Select All'}
-                </button>
-                
-                <span className="text-sm text-gray-500">
-                  {selectedPatches.size} of {patches.length} selected
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => {
-                    patches.forEach(patch => onRejectPatch(patch));
-                  }}
-                  className="btn btn-outline"
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Reject All
-                </button>
-                
-                <button
-                  onClick={() => {
-                    patches.forEach(patch => onApplyPatch(patch));
-                  }}
-                  className="btn btn-primary"
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Apply All
-                </button>
-              </div>
+              {/* Expanded Content */}
+              {isExpanded && (
+                <div className="px-4 pb-4 border-t border-gray-200">
+                  <div className="pt-4 space-y-4">
+                    {/* Patch Diff */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Patch Diff</h4>
+                      <div className="bg-gray-50 rounded-lg p-3 border">
+                        <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono overflow-x-auto">
+                          {patch.diff}
+                        </pre>
+                      </div>
+                    </div>
+
+                    {/* Risks */}
+                    {hasRisks && (
+                      <div>
+                        <h4 className="text-sm font-medium text-orange-700 mb-2">Risks</h4>
+                        <ul className="list-disc list-inside text-sm text-orange-800 space-y-1">
+                          {patch.risks.map((risk, index) => (
+                            <li key={index}>{risk}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="text-xs text-gray-500">
+                        Created: {new Date(patch.created_at).toLocaleString()}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => onViewDiff && onViewDiff(patch)}
+                          className="btn btn-outline btn-xs"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Download Diff
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 };

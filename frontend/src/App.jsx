@@ -1,5 +1,6 @@
 import React from 'react';
 import useAppStore from './store/useAppStore';
+import { ProgressProvider } from './contexts/ProgressContext';
 
 // Import pages
 import UploadPage from './pages/Upload';
@@ -29,9 +30,11 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
-      {renderCurrentPage()}
-    </div>
+    <ProgressProvider>
+      <div className={`min-h-screen ${theme === 'dark' ? 'dark' : ''}`}>
+        {renderCurrentPage()}
+      </div>
+    </ProgressProvider>
   );
 }
 

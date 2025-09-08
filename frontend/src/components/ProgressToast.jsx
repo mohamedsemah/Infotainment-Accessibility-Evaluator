@@ -1,131 +1,106 @@
-import React from 'react';
-import { 
-  Loader2, 
-  CheckCircle, 
-  AlertCircle, 
-  X,
-  Clock,
-  Zap
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 
-const ProgressToast = ({ 
-  progress, 
-  step, 
-  isVisible = true, 
-  onClose,
-  type = 'processing' // 'processing', 'success', 'error'
-}) => {
+const ProgressToast = ({ isVisible, progress, message, type = 'info', onClose }) => {
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) {
+      setIsClosing(false);
+    }
+  }, [isVisible]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 300);
+  };
+
   if (!isVisible) return null;
 
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5 text-success-600" />;
+        return <CheckCircle className="w-5 h-5 text-green-600" />;
       case 'error':
-        return <AlertCircle className="w-5 h-5 text-error-600" />;
+        return <XCircle className="w-5 h-5 text-red-600" />;
+      case 'warning':
+        return <AlertCircle className="w-5 h-5 text-yellow-600" />;
+      case 'loading':
+        return <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />;
       default:
-        return <Loader2 className="w-5 h-5 text-primary-600 animate-spin" />;
+        return <AlertCircle className="w-5 h-5 text-blue-600" />;
     }
   };
 
-  const getTitle = () => {
+  const getBackgroundColor = () => {
     switch (type) {
       case 'success':
-        return 'Analysis Complete';
+        return 'bg-green-50 border-green-200';
       case 'error':
-        return 'Analysis Failed';
+        return 'bg-red-50 border-red-200';
+      case 'warning':
+        return 'bg-yellow-50 border-yellow-200';
+      case 'loading':
+        return 'bg-blue-50 border-blue-200';
       default:
-        return 'Processing Analysis';
+        return 'bg-blue-50 border-blue-200';
     }
   };
 
-  const getStepIcon = (stepName) => {
-    if (stepName?.toLowerCase().includes('upload')) {
-      return <Zap className="w-4 h-4" />;
+  const getTextColor = () => {
+    switch (type) {
+      case 'success':
+        return 'text-green-800';
+      case 'error':
+        return 'text-red-800';
+      case 'warning':
+        return 'text-yellow-800';
+      case 'loading':
+        return 'text-blue-800';
+      default:
+        return 'text-blue-800';
     }
-    if (stepName?.toLowerCase().includes('agent')) {
-      return <Loader2 className="w-4 h-4" />;
-    }
-    if (stepName?.toLowerCase().includes('cluster')) {
-      return <CheckCircle className="w-4 h-4" />;
-    }
-    return <Clock className="w-4 h-4" />;
-  };
-
-  const getStepColor = (stepName) => {
-    if (stepName?.toLowerCase().includes('complete')) {
-      return 'text-success-600';
-    }
-    if (stepName?.toLowerCase().includes('error')) {
-      return 'text-error-600';
-    }
-    return 'text-primary-600';
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-sm w-full">
-      <div className={`card shadow-lg border-l-4 ${
-        type === 'success' ? 'border-l-success-500' :
-        type === 'error' ? 'border-l-error-500' :
-        'border-l-primary-500'
-      }`}>
-        <div className="card-content p-4">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              {getIcon()}
+    <div
+      className={`fixed top-4 right-4 z-50 max-w-sm w-full bg-white rounded-lg shadow-lg border transition-all duration-300 ${
+        isClosing ? 'opacity-0 transform translate-x-full' : 'opacity-100 transform translate-x-0'
+      } ${getBackgroundColor()}`}
+    >
+      <div className="p-4">
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            {getIcon()}
+          </div>
+          <div className="ml-3 w-0 flex-1">
+            <div className={`text-sm font-medium ${getTextColor()}`}>
+              {message}
             </div>
-            
-            <div className="flex-1 min-w-0">
-              <h4 className="font-medium text-gray-900 mb-1">
-                {getTitle()}
-              </h4>
-              
-              {step && (
-                <div className="flex items-center space-x-2 mb-3">
-                  {getStepIcon(step)}
-                  <span className={`text-sm font-medium ${getStepColor(step)}`}>
-                    {step}
-                  </span>
+            {progress !== undefined && (
+              <div className="mt-2">
+                <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                  <span>Progress</span>
+                  <span>{Math.round(progress * 100)}%</span>
                 </div>
-              )}
-              
-              {type === 'processing' && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm text-gray-600">
-                    <span>Progress</span>
-                    <span>{Math.round(progress)}%</span>
-                  </div>
-                  
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-primary-600 h-2 rounded-full transition-all duration-300 ease-out"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${progress * 100}%` }}
+                  />
                 </div>
-              )}
-              
-              {type === 'success' && (
-                <p className="text-sm text-gray-600">
-                  Your accessibility analysis has been completed successfully.
-                </p>
-              )}
-              
-              {type === 'error' && (
-                <p className="text-sm text-gray-600">
-                  There was an error during analysis. Please try again.
-                </p>
-              )}
-            </div>
-            
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              </div>
             )}
+          </div>
+          <div className="ml-4 flex-shrink-0 flex">
+            <button
+              onClick={handleClose}
+              className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition ease-in-out duration-150"
+            >
+              <XCircle className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>

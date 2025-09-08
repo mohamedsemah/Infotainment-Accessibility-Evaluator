@@ -7,7 +7,7 @@ import uvicorn
 import os
 from contextlib import asynccontextmanager
 
-from routers import upload, analyze, plan, run, cluster, patch, report, progress
+from routers import upload, analyze, plan, run, cluster, patch, report, progress, recheck
 from services.llm.provider_base import LLMProvider
 from services.llm.openai_provider import OpenAIProvider
 from services.llm.anthropic_provider import AnthropicProvider
@@ -26,6 +26,9 @@ async def lifespan(app: FastAPI):
     
     # Startup
     print("Starting Infotainment Accessibility Evaluator...")
+    
+    # Database layer removed - using in-memory storage
+    print("Using in-memory storage")
     
     # Initialize LLM provider
     if settings.LLM_PROVIDER != "none":
@@ -91,6 +94,7 @@ app.include_router(cluster.router, prefix="/api", tags=["cluster"])
 app.include_router(patch.router, prefix="/api", tags=["patch"])
 app.include_router(report.router, prefix="/api", tags=["report"])
 app.include_router(progress.router, prefix="/api", tags=["progress"])
+app.include_router(recheck.router, prefix="/api", tags=["recheck"])
 
 @app.get("/", response_class=HTMLResponse)
 async def root():

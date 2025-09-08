@@ -1,418 +1,418 @@
-import React, { useState } from 'react';
-import { 
-  Save, 
-  RefreshCw, 
-  Palette, 
-  Globe, 
-  Bell,
-  Shield,
-  Database,
-  ArrowLeft
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Save, RotateCcw, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 
-const SettingsPage = () => {
-  const {
-    theme,
-    sidebarOpen,
-    setTheme,
-    setSidebarOpen,
-    setCurrentPage,
-    resetAll
-  } = useAppStore();
-
+const Settings = () => {
+  const { theme, setTheme, resetAll } = useAppStore();
+  
   const [settings, setSettings] = useState({
-    // Appearance
-    theme: theme,
-    sidebarOpen: sidebarOpen,
-    
-    // Analysis
-    autoAnalyze: true,
-    parallelAgents: true,
-    maxConcurrentAgents: 3,
-    
-    // Notifications
-    emailNotifications: false,
-    desktopNotifications: true,
-    progressUpdates: true,
-    
-    // LLM Integration
+    // LLM Settings
     llmProvider: 'none',
-    llmApiKey: '',
-    llmModel: 'gpt-4',
+    openaiApiKey: '',
+    anthropicApiKey: '',
+    deepseekApiKey: '',
+    openaiModel: 'gpt-4',
+    anthropicModel: 'claude-3-sonnet-20240229',
+    deepseekModel: 'deepseek-coder',
     
-    // Advanced
-    maxFileSize: 50,
-    timeoutSeconds: 300,
+    // Analysis Settings
+    clusteringMethod: 'semantic',
+    similarityThreshold: 0.7,
+    maxConcurrentAgents: 10,
+    analysisTimeout: 1800,
+    
+    // UI Settings
+    complianceLevel: 'AA',
+    showAdvancedOptions: false,
+    autoApplyPatches: false,
     enableSandbox: true,
-    autoApplyPatches: false
+    
+    // Display Settings
+    itemsPerPage: 20,
+    showLineNumbers: true,
+    showCodeSnippets: true,
+    showMetrics: true
   });
 
-  const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showApiKeys, setShowApiKeys] = useState({
+    openai: false,
+    anthropic: false,
+    deepseek: false
+  });
+  const [saveStatus, setSaveStatus] = useState(null);
+
+  useEffect(() => {
+    // Load settings from localStorage
+    const savedSettings = localStorage.getItem('infotainment-a11y-settings');
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        setSettings(prev => ({ ...prev, ...parsed }));
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    }
+  }, []);
 
   const handleSettingChange = (key, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: value
-    }));
-    setHasChanges(true);
+    setSettings(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    // Apply settings to store
-    setTheme(settings.theme);
-    setSidebarOpen(settings.sidebarOpen);
-    
-    // Save to localStorage
-    localStorage.setItem('app-settings', JSON.stringify(settings));
-    
-    setHasChanges(false);
+  const handleApiKeyToggle = (provider) => {
+    setShowApiKeys(prev => ({ ...prev, [provider]: !prev[provider] }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveStatus(null);
+
+    try {
+      // Save to localStorage
+      localStorage.setItem('infotainment-a11y-settings', JSON.stringify(settings));
+      
+      // In a real app, you'd also save to the backend
+      // await apiClient.updateSettings(settings);
+      
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(null), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleReset = () => {
-    const defaultSettings = {
-      theme: 'light',
-      sidebarOpen: true,
-      autoAnalyze: true,
-      parallelAgents: true,
-      maxConcurrentAgents: 3,
-      emailNotifications: false,
-      desktopNotifications: true,
-      progressUpdates: true,
-      llmProvider: 'none',
-      llmApiKey: '',
-      llmModel: 'gpt-4',
-      maxFileSize: 50,
-      timeoutSeconds: 300,
-      enableSandbox: true,
-      autoApplyPatches: false
-    };
-    
-    setSettings(defaultSettings);
-    setHasChanges(true);
+    if (window.confirm('Are you sure you want to reset all settings to default values?')) {
+      setSettings({
+        llmProvider: 'none',
+        openaiApiKey: '',
+        anthropicApiKey: '',
+        deepseekApiKey: '',
+        openaiModel: 'gpt-4',
+        anthropicModel: 'claude-3-sonnet-20240229',
+        deepseekModel: 'deepseek-coder',
+        clusteringMethod: 'semantic',
+        similarityThreshold: 0.7,
+        maxConcurrentAgents: 10,
+        analysisTimeout: 1800,
+        complianceLevel: 'AA',
+        showAdvancedOptions: false,
+        autoApplyPatches: false,
+        enableSandbox: true,
+        itemsPerPage: 20,
+        showLineNumbers: true,
+        showCodeSnippets: true,
+        showMetrics: true
+      });
+      setSaveStatus('reset');
+      setTimeout(() => setSaveStatus(null), 3000);
+    }
   };
 
-  const handleBack = () => {
-    setCurrentPage('results');
-  };
-
-  const llmProviders = [
-    { id: 'none', name: 'Disabled', description: 'No LLM integration' },
-    { id: 'openai', name: 'OpenAI', description: 'GPT-4, GPT-3.5-turbo' },
-    { id: 'anthropic', name: 'Anthropic', description: 'Claude 3, Claude 2' },
-    { id: 'deepseek', name: 'DeepSeek', description: 'DeepSeek Coder' }
-  ];
+  const renderApiKeyField = (provider, key, label) => (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        {label} API Key
+      </label>
+      <div className="relative">
+        <input
+          type={showApiKeys[provider] ? 'text' : 'password'}
+          value={settings[key]}
+          onChange={(e) => handleSettingChange(key, e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          placeholder={`Enter your ${label} API key`}
+        />
+        <button
+          type="button"
+          onClick={() => handleApiKeyToggle(provider)}
+          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+        >
+          {showApiKeys[provider] ? (
+            <EyeOff className="w-4 h-4" />
+          ) : (
+            <Eye className="w-4 h-4" />
+          )}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleBack}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  Settings
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Configure your accessibility analysis preferences
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={handleReset}
-                className="btn btn-outline"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Reset
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={!hasChanges}
-                className="btn btn-primary"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
-              </button>
-            </div>
-          </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
+          <p className="text-gray-600">
+            Configure your accessibility evaluation preferences and API keys.
+          </p>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="space-y-6">
-          {/* Appearance Settings */}
-          <div className="card">
-            <div className="card-header">
-              <div className="flex items-center space-x-3">
-                <Palette className="w-5 h-5 text-primary-600" />
-                <h3 className="card-title text-lg">Appearance</h3>
-              </div>
-            </div>
-            <div className="card-content space-y-4">
+        {/* Save Status */}
+        {saveStatus && (
+          <div className={`mb-6 p-4 rounded-lg flex items-center ${
+            saveStatus === 'success' ? 'bg-green-50 text-green-800' :
+            saveStatus === 'error' ? 'bg-red-50 text-red-800' :
+            'bg-blue-50 text-blue-800'
+          }`}>
+            {saveStatus === 'success' && <CheckCircle className="w-5 h-5 mr-2" />}
+            {saveStatus === 'error' && <AlertCircle className="w-5 h-5 mr-2" />}
+            {saveStatus === 'reset' && <RotateCcw className="w-5 h-5 mr-2" />}
+            {saveStatus === 'success' && 'Settings saved successfully!'}
+            {saveStatus === 'error' && 'Error saving settings. Please try again.'}
+            {saveStatus === 'reset' && 'Settings reset to default values.'}
+          </div>
+        )}
+
+        <div className="space-y-8">
+          {/* LLM Settings */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">LLM Provider Settings</h2>
+            <div className="space-y-4">
               <div>
-                <label className="label">Theme</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  LLM Provider
+                </label>
                 <select
-                  value={settings.theme}
-                  onChange={(e) => handleSettingChange('theme', e.target.value)}
-                  className="input mt-1"
+                  value={settings.llmProvider}
+                  onChange={(e) => handleSettingChange('llmProvider', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                  <option value="system">System</option>
+                  <option value="none">None (Heuristic Only)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="deepseek">DeepSeek</option>
                 </select>
               </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="label">Sidebar</label>
-                  <p className="text-sm text-gray-600">Show sidebar by default</p>
+
+              {settings.llmProvider === 'openai' && (
+                <div className="space-y-4">
+                  {renderApiKeyField('openai', 'openaiApiKey', 'OpenAI')}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Model
+                    </label>
+                    <select
+                      value={settings.openaiModel}
+                      onChange={(e) => handleSettingChange('openaiModel', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="gpt-4">GPT-4</option>
+                      <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                      <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </select>
+                  </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.sidebarOpen}
-                    onChange={(e) => handleSettingChange('sidebarOpen', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                </label>
-              </div>
+              )}
+
+              {settings.llmProvider === 'anthropic' && (
+                <div className="space-y-4">
+                  {renderApiKeyField('anthropic', 'anthropicApiKey', 'Anthropic')}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Model
+                    </label>
+                    <select
+                      value={settings.anthropicModel}
+                      onChange={(e) => handleSettingChange('anthropicModel', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+                      <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                      <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {settings.llmProvider === 'deepseek' && (
+                <div className="space-y-4">
+                  {renderApiKeyField('deepseek', 'deepseekApiKey', 'DeepSeek')}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Model
+                    </label>
+                    <select
+                      value={settings.deepseekModel}
+                      onChange={(e) => handleSettingChange('deepseekModel', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    >
+                      <option value="deepseek-coder">DeepSeek Coder</option>
+                      <option value="deepseek-chat">DeepSeek Chat</option>
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Analysis Settings */}
-          <div className="card">
-            <div className="card-header">
-              <div className="flex items-center space-x-3">
-                <Database className="w-5 h-5 text-primary-600" />
-                <h3 className="card-title text-lg">Analysis</h3>
-              </div>
-            </div>
-            <div className="card-content space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="label">Auto-analyze</label>
-                  <p className="text-sm text-gray-600">Automatically start analysis after upload</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.autoAnalyze}
-                    onChange={(e) => handleSettingChange('autoAnalyze', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                </label>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="label">Parallel Agents</label>
-                  <p className="text-sm text-gray-600">Run multiple agents simultaneously</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.parallelAgents}
-                    onChange={(e) => handleSettingChange('parallelAgents', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                </label>
-              </div>
-              
-              {settings.parallelAgents && (
-                <div>
-                  <label className="label">Max Concurrent Agents</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={settings.maxConcurrentAgents}
-                    onChange={(e) => handleSettingChange('maxConcurrentAgents', parseInt(e.target.value))}
-                    className="input mt-1 w-20"
-                  />
-                </div>
-              )}
-              
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Analysis Settings</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="label">Max File Size (MB)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Clustering Method
+                </label>
+                <select
+                  value={settings.clusteringMethod}
+                  onChange={(e) => handleSettingChange('clusteringMethod', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="semantic">Semantic</option>
+                  <option value="rule_based">Rule-based</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Similarity Threshold: {settings.similarityThreshold}
+                </label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1.0"
+                  step="0.1"
+                  value={settings.similarityThreshold}
+                  onChange={(e) => handleSettingChange('similarityThreshold', parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Max Concurrent Agents
+                </label>
                 <input
                   type="number"
                   min="1"
-                  max="100"
-                  value={settings.maxFileSize}
-                  onChange={(e) => handleSettingChange('maxFileSize', parseInt(e.target.value))}
-                  className="input mt-1 w-20"
+                  max="20"
+                  value={settings.maxConcurrentAgents}
+                  onChange={(e) => handleSettingChange('maxConcurrentAgents', parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
-              
+
               <div>
-                <label className="label">Timeout (seconds)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Analysis Timeout (seconds)
+                </label>
                 <input
                   type="number"
-                  min="60"
-                  max="1800"
-                  value={settings.timeoutSeconds}
-                  onChange={(e) => handleSettingChange('timeoutSeconds', parseInt(e.target.value))}
-                  className="input mt-1 w-20"
+                  min="300"
+                  max="3600"
+                  value={settings.analysisTimeout}
+                  onChange={(e) => handleSettingChange('analysisTimeout', parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
             </div>
           </div>
 
-          {/* LLM Integration */}
-          <div className="card">
-            <div className="card-header">
-              <div className="flex items-center space-x-3">
-                <Globe className="w-5 h-5 text-primary-600" />
-                <h3 className="card-title text-lg">LLM Integration</h3>
-              </div>
-            </div>
-            <div className="card-content space-y-4">
+          {/* UI Settings */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">UI Settings</h2>
+            <div className="space-y-4">
               <div>
-                <label className="label">Provider</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  WCAG Compliance Level
+                </label>
                 <select
-                  value={settings.llmProvider}
-                  onChange={(e) => handleSettingChange('llmProvider', e.target.value)}
-                  className="input mt-1"
+                  value={settings.complianceLevel}
+                  onChange={(e) => handleSettingChange('complianceLevel', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
-                  {llmProviders.map(provider => (
-                    <option key={provider.id} value={provider.id}>
-                      {provider.name} - {provider.description}
-                    </option>
-                  ))}
+                  <option value="A">Level A</option>
+                  <option value="AA">Level AA</option>
+                  <option value="AAA">Level AAA</option>
                 </select>
               </div>
-              
-              {settings.llmProvider !== 'none' && (
-                <>
-                  <div>
-                    <label className="label">API Key</label>
-                    <input
-                      type="password"
-                      value={settings.llmApiKey}
-                      onChange={(e) => handleSettingChange('llmApiKey', e.target.value)}
-                      placeholder="Enter your API key"
-                      className="input mt-1"
-                    />
-                    <p className="text-sm text-gray-600 mt-1">
-                      Your API key is stored locally and never shared
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <label className="label">Model</label>
-                    <select
-                      value={settings.llmModel}
-                      onChange={(e) => handleSettingChange('llmModel', e.target.value)}
-                      className="input mt-1"
-                    >
-                      <option value="gpt-4">GPT-4</option>
-                      <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                      <option value="claude-3-opus">Claude 3 Opus</option>
-                      <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-                      <option value="deepseek-coder">DeepSeek Coder</option>
-                    </select>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
 
-          {/* Notifications */}
-          <div className="card">
-            <div className="card-header">
-              <div className="flex items-center space-x-3">
-                <Bell className="w-5 h-5 text-primary-600" />
-                <h3 className="card-title text-lg">Notifications</h3>
-              </div>
-            </div>
-            <div className="card-content space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="label">Desktop Notifications</label>
-                  <p className="text-sm text-gray-600">Show browser notifications for progress updates</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.desktopNotifications}
-                    onChange={(e) => handleSettingChange('desktopNotifications', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                </label>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="label">Progress Updates</label>
-                  <p className="text-sm text-gray-600">Show real-time progress during analysis</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.progressUpdates}
-                    onChange={(e) => handleSettingChange('progressUpdates', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* Advanced Settings */}
-          <div className="card">
-            <div className="card-header">
-              <div className="flex items-center space-x-3">
-                <Shield className="w-5 h-5 text-primary-600" />
-                <h3 className="card-title text-lg">Advanced</h3>
-              </div>
-            </div>
-            <div className="card-content space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="label">Enable Sandbox</label>
-                  <p className="text-sm text-gray-600">Allow testing patches in isolated environment</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.enableSandbox}
-                    onChange={(e) => handleSettingChange('enableSandbox', e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                </label>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <label className="label">Auto-apply Patches</label>
-                  <p className="text-sm text-gray-600">Automatically apply high-confidence patches</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
+              <div className="space-y-3">
+                <label className="flex items-center">
                   <input
                     type="checkbox"
                     checked={settings.autoApplyPatches}
                     onChange={(e) => handleSettingChange('autoApplyPatches', e.target.checked)}
-                    className="sr-only peer"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                  <span className="ml-2 text-sm text-gray-700">Auto-apply patches</span>
+                </label>
+
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={settings.enableSandbox}
+                    onChange={(e) => handleSettingChange('enableSandbox', e.target.checked)}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Enable sandbox testing</span>
+                </label>
+
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={settings.showLineNumbers}
+                    onChange={(e) => handleSettingChange('showLineNumbers', e.target.checked)}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Show line numbers</span>
+                </label>
+
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={settings.showCodeSnippets}
+                    onChange={(e) => handleSettingChange('showCodeSnippets', e.target.checked)}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Show code snippets</span>
+                </label>
+
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={settings.showMetrics}
+                    onChange={(e) => handleSettingChange('showMetrics', e.target.checked)}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Show metrics</span>
                 </label>
               </div>
             </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handleReset}
+              className="btn btn-outline"
+            >
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset to Defaults
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="btn btn-primary"
+            >
+              {isSaving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Settings
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -420,4 +420,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+export default Settings;

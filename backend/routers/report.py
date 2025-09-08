@@ -13,7 +13,6 @@ from pathlib import Path
 
 from models.schemas import Report, ErrorResponse
 from routers.upload import get_upload_path
-from routers.patch import patches_storage
 from services.reporting.html_report import generate_html_report
 from services.reporting.pdf_report import generate_pdf_report
 from services.reporting.csv_report import generate_csv_report
