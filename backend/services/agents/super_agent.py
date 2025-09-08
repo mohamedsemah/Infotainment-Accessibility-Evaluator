@@ -110,6 +110,15 @@ class SuperAgent:
             
             print(f"DEBUG: Total findings collected: {len(self.all_findings)}")
             
+            # Set all_findings in execution_results - convert to dicts for JSON serialization
+            execution_results['all_findings'] = [finding.dict() for finding in self.all_findings]
+            print(f"DEBUG: execution_results['all_findings'] length: {len(execution_results['all_findings'])}")
+            
+            # Debug: Check if findings are now dictionaries
+            if execution_results['all_findings']:
+                print(f"DEBUG: First finding type: {type(execution_results['all_findings'][0])}")
+                print(f"DEBUG: First finding keys: {list(execution_results['all_findings'][0].keys()) if isinstance(execution_results['all_findings'][0], dict) else 'Not a dict'}")
+            
             # Run TriageAgent to cluster findings
             if self.all_findings:
                 triage_agent = self.agents['TriageAgent']
@@ -121,8 +130,6 @@ class SuperAgent:
                     token_agent = self.agents['TokenHarmonizerAgent']
                     patches = await token_agent.analyze(clusters, upload_path)
                     execution_results['patches'] = patches
-            
-            execution_results['all_findings'] = self.all_findings
             
         except Exception as e:
             execution_results['success'] = False

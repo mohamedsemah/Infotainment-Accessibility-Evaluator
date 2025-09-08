@@ -40,24 +40,17 @@ class ContrastAgent(BaseAgent):
         css_files = self._find_files(upload_path, ['.css', '.scss', '.sass'])
         qml_files = self._find_files(upload_path, ['.qml'])
         
-        print(f"DEBUG: ContrastAgent found {len(html_files)} HTML, {len(css_files)} CSS, {len(qml_files)} QML files")
-        
         # Analyze HTML files for text elements
         for html_file in html_files:
-            print(f"DEBUG: ContrastAgent analyzing HTML: {html_file}")
             await self._analyze_html_file(html_file, upload_path)
         
         # Analyze CSS files for color declarations
         for css_file in css_files:
-            print(f"DEBUG: ContrastAgent analyzing CSS: {css_file}")
             await self._analyze_css_file(css_file, upload_path)
         
         # Analyze QML files for color properties
         for qml_file in qml_files:
-            print(f"DEBUG: ContrastAgent analyzing QML: {qml_file}")
             await self._analyze_qml_file(qml_file, upload_path)
-        
-        print(f"DEBUG: ContrastAgent found {len(self.findings)} contrast issues")
         return self.findings
     
     def _find_files(self, upload_path: str, extensions: List[str]) -> List[str]:
@@ -113,7 +106,6 @@ class ContrastAgent(BaseAgent):
             
             # Parse CSS
             stylesheet = parse_stylesheet(content)
-            print(f"DEBUG: ContrastAgent parsed {len(stylesheet)} CSS rules")
             
             for i, rule in enumerate(stylesheet):
                 if hasattr(rule, 'prelude') and hasattr(rule, 'content'):
@@ -122,7 +114,6 @@ class ContrastAgent(BaseAgent):
                     
                     # Extract color properties
                     color_props = self._extract_color_properties(rule.content)
-                    print(f"DEBUG: Rule {i+1}: {len(selectors)} selectors, {len(color_props)} color properties")
                     
                     # Check contrast for each color combination
                     for selector in selectors:
@@ -182,13 +173,10 @@ class ContrastAgent(BaseAgent):
     def _extract_selectors(self, prelude) -> List[str]:
         """Extract CSS selectors from rule prelude."""
         selectors = []
-        print(f"DEBUG: Extracting selectors from prelude: {type(prelude)}")
         
         if isinstance(prelude, list):
-            print(f"DEBUG: Prelude is a list with {len(prelude)} items")
             current_selector = ""
             for i, token in enumerate(prelude):
-                print(f"DEBUG: Token {i}: {type(token)} - {token}")
                 if hasattr(token, 'type'):
                     if token.type == 'ident':
                         if current_selector:
@@ -209,24 +197,20 @@ class ContrastAgent(BaseAgent):
             if current_selector:
                 selectors.append(current_selector.strip())
         
-        print(f"DEBUG: Extracted selectors: {selectors}")
         return selectors
     
     def _extract_color_properties(self, content) -> Dict[str, str]:
         """Extract color-related properties from CSS rule content."""
         color_props = {}
-        print(f"DEBUG: Extracting color properties from content: {type(content)}")
         
         if isinstance(content, list):
             i = 0
             while i < len(content):
                 token = content[i]
-                print(f"DEBUG: Content token {i}: {type(token)} - {token}")
                 
                 # Look for property name (ident token)
                 if hasattr(token, 'type') and token.type == 'ident':
                     prop_name = token.value
-                    print(f"DEBUG: Found property name: {prop_name}")
                     
                     # Check if it's a color-related property
                     if prop_name in ['color', 'background-color', 'border-color', 'outline-color']:
@@ -260,11 +244,9 @@ class ContrastAgent(BaseAgent):
                                     color_value = str(value_token.value) if hasattr(value_token, 'value') else str(value_token)
                                 
                                 color_props[prop_name] = color_value
-                                print(f"DEBUG: Found color property: {prop_name} = {color_value}")
                 
                 i += 1
         
-        print(f"DEBUG: Extracted color properties: {color_props}")
         return color_props
     
     async def _check_text_contrast(self, element, styles: Dict[str, str], relative_path: str, file_path: str):
