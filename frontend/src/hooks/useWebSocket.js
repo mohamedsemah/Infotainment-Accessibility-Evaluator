@@ -15,6 +15,11 @@ const useWebSocket = (url, options = {}) => {
       return;
     }
 
+    // Prevent rapid reconnections
+    if (reconnectTimeoutRef.current) {
+      return;
+    }
+
     try {
       const ws = new WebSocket(url);
       
@@ -54,12 +59,13 @@ const useWebSocket = (url, options = {}) => {
           options.onClose(event);
         }
 
-        // Attempt to reconnect if not a normal closure
-        if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) {
+        // Attempt to reconnect if not a normal closure and not already reconnecting
+        if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts && !reconnectTimeoutRef.current) {
           reconnectAttempts.current++;
           console.log(`Attempting to reconnect (${reconnectAttempts.current}/${maxReconnectAttempts})...`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
+            reconnectTimeoutRef.current = null;
             connect();
           }, reconnectInterval);
         } else if (reconnectAttempts.current >= maxReconnectAttempts) {
@@ -81,7 +87,7 @@ const useWebSocket = (url, options = {}) => {
       console.error('Error creating WebSocket:', err);
       setError('Failed to create WebSocket connection');
     }
-  }, [url, options, maxReconnectAttempts, reconnectInterval]);
+  }, [url, maxReconnectAttempts, reconnectInterval]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -128,7 +134,7 @@ const useWebSocket = (url, options = {}) => {
     return sendMessage({ type: 'unsubscribe', events });
   }, [sendMessage]);
 
-  // Auto-connect on mount
+  // Auto-connect on mount - only when URL changes
   useEffect(() => {
     if (url) {
       connect();
@@ -137,7 +143,7 @@ const useWebSocket = (url, options = {}) => {
     return () => {
       disconnect();
     };
-  }, [url, connect, disconnect]);
+  }, [url]); // Removed connect and disconnect from dependencies
 
   // Cleanup on unmount
   useEffect(() => {

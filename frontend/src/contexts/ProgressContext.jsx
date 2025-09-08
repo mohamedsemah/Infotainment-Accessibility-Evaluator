@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import useWebSocket from '../hooks/useWebSocket';
 import useAppStore from '../store/useAppStore';
 
@@ -26,7 +26,7 @@ const progressReducer = (state, action) => {
       return {
         ...state,
         lastUpdate: action.payload,
-        updates: [...state.updates, action.payload].slice(-50) // Keep last 50 updates
+        updates: [...state.updates, action.payload].slice(-20) // Keep last 20 updates only
       };
     case 'AGENT_START':
       return {
@@ -38,14 +38,14 @@ const progressReducer = (state, action) => {
       return {
         ...state,
         activeAgents: state.activeAgents.filter(agent => agent.agent_name !== action.payload.agent_name),
-        completedAgents: [...state.completedAgents, action.payload],
+        completedAgents: [...state.completedAgents, action.payload].slice(-10), // Keep last 10 completed agents
         lastUpdate: action.payload
       };
     case 'AGENT_ERROR':
       return {
         ...state,
         activeAgents: state.activeAgents.filter(agent => agent.agent_name !== action.payload.agent_name),
-        errorAgents: [...state.errorAgents, action.payload],
+        errorAgents: [...state.errorAgents, action.payload].slice(-5), // Keep last 5 error agents
         lastUpdate: action.payload
       };
     case 'ANALYSIS_START':
@@ -94,25 +94,8 @@ export const ProgressProvider = ({ children }) => {
 
   const wsUrl = uploadId ? `ws://localhost:8000/api/progress?upload_id=${uploadId}` : null;
 
-  const { isConnected, error, lastMessage, sendMessage } = useWebSocket(wsUrl, {
-    onOpen: () => {
-      dispatch({ type: 'CONNECT' });
-      console.log('Progress WebSocket connected');
-    },
-    onClose: () => {
-      dispatch({ type: 'DISCONNECT' });
-      console.log('Progress WebSocket disconnected');
-    },
-    onError: (error) => {
-      dispatch({ type: 'ERROR', payload: error.message || 'WebSocket error' });
-      console.error('Progress WebSocket error:', error);
-    },
-    onMessage: (data) => {
-      handleWebSocketMessage(data);
-    }
-  });
-
-  const handleWebSocketMessage = (data) => {
+  // Stable callback references to prevent re-connections
+  const handleWebSocketMessage = useCallback((data) => {
     switch (data.event_type) {
       case 'analysis_start':
         dispatch({ type: 'ANALYSIS_START', payload: data });
@@ -147,11 +130,45 @@ export const ProgressProvider = ({ children }) => {
       default:
         dispatch({ type: 'PROGRESS_UPDATE', payload: data });
     }
-  };
+  }, [setAgentStatus, setRunningAgents, setCompletedAgents]);
 
-  const clearProgress = () => {
+  const handleWebSocketOpen = useCallback(() => {
+    dispatch({ type: 'CONNECT' });
+    console.log('Progress WebSocket connected');
+  }, []);
+
+  const handleWebSocketClose = useCallback(() => {
+    dispatch({ type: 'DISCONNECT' });
+    console.log('Progress WebSocket disconnected');
+  }, []);
+
+  const handleWebSocketError = useCallback((error) => {
+    dispatch({ type: 'ERROR', payload: error.message || 'WebSocket error' });
+    console.error('Progress WebSocket error:', error);
+  }, []);
+
+  const { isConnected, error, lastMessage, sendMessage } = useWebSocket(wsUrl, {
+    onOpen: handleWebSocketOpen,
+    onClose: handleWebSocketClose,
+    onError: handleWebSocketError,
+    onMessage: handleWebSocketMessage
+  });
+
+
+  const clearProgress = useCallback(() => {
     dispatch({ type: 'CLEAR' });
-  };
+  }, []);
+
+  // Memory cleanup - clear old data periodically
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      if (state.updates.length > 50 || state.completedAgents.length > 20) {
+        dispatch({ type: 'CLEAR' });
+      }
+    }, 30000); // Cleanup every 30 seconds
+
+    return () => clearInterval(cleanupInterval);
+  }, [state.updates.length, state.completedAgents.length]);
 
   const subscribeToEvents = (events) => {
     if (isConnected) {
@@ -171,7 +188,7 @@ export const ProgressProvider = ({ children }) => {
     }
   };
 
-  // Auto-subscribe to all events when connected
+  // Auto-subscribe to all events when connected (only once)
   useEffect(() => {
     if (isConnected) {
       subscribeToEvents([
@@ -187,7 +204,7 @@ export const ProgressProvider = ({ children }) => {
         'patch_generation_complete'
       ]);
     }
-  }, [isConnected]);
+  }, [isConnected, subscribeToEvents]);
 
   const value = {
     ...state,

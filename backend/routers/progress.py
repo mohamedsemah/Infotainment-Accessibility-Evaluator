@@ -126,33 +126,41 @@ async def progress_websocket(websocket: WebSocket, upload_id: str = Query(...)):
     try:
         while True:
             # Keep connection alive and handle client messages
-            data = await websocket.receive_text()
-            message = json.loads(data)
-            
-            # Handle different message types from client
-            if message.get('type') == 'ping':
+            try:
+                data = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+                message = json.loads(data)
+                
+                # Handle different message types from client
+                if message.get('type') == 'ping':
+                    await manager.send_personal_message({
+                        'type': 'pong',
+                        'timestamp': datetime.now().isoformat()
+                    }, websocket)
+                elif message.get('type') == 'subscribe':
+                    # Client wants to subscribe to specific events
+                    await manager.send_personal_message({
+                        'type': 'subscription_confirmed',
+                        'events': message.get('events', []),
+                        'timestamp': datetime.now().isoformat()
+                    }, websocket)
+                elif message.get('type') == 'unsubscribe':
+                    # Client wants to unsubscribe from events
+                    await manager.send_personal_message({
+                        'type': 'unsubscription_confirmed',
+                        'timestamp': datetime.now().isoformat()
+                    }, websocket)
+            except asyncio.TimeoutError:
+                # Send keepalive ping
                 await manager.send_personal_message({
-                    'type': 'pong',
-                    'timestamp': datetime.now().isoformat()
-                }, websocket)
-            elif message.get('type') == 'subscribe':
-                # Client wants to subscribe to specific events
-                await manager.send_personal_message({
-                    'type': 'subscription_confirmed',
-                    'events': message.get('events', []),
-                    'timestamp': datetime.now().isoformat()
-                }, websocket)
-            elif message.get('type') == 'unsubscribe':
-                # Client wants to unsubscribe from events
-                await manager.send_personal_message({
-                    'type': 'unsubscription_confirmed',
+                    'type': 'keepalive',
                     'timestamp': datetime.now().isoformat()
                 }, websocket)
             
     except WebSocketDisconnect:
+        logger.info(f"WebSocket disconnected normally for upload {upload_id}")
         manager.disconnect(websocket)
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        logger.error(f"WebSocket error for upload {upload_id}: {e}")
         manager.disconnect(websocket)
 
 @router.post("/progress/{upload_id}/send")
