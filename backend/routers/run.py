@@ -44,11 +44,6 @@ async def run_agents(
         # Execute plan
         results = await agent.execute_plan(plan, upload_path)
         
-        print(f"DEBUG: Run router returning results with {len(results.get('all_findings', []))} findings")
-        print(f"DEBUG: Run router results keys: {list(results.keys())}")
-        if results.get('all_findings'):
-            print(f"DEBUG: First finding in results: {results['all_findings'][0] if results['all_findings'] else 'None'}")
-        
         return results
         
     except HTTPException:

@@ -51,6 +51,7 @@ class ContrastAgent(BaseAgent):
         # Analyze QML files for color properties
         for qml_file in qml_files:
             await self._analyze_qml_file(qml_file, upload_path)
+        
         return self.findings
     
     def _find_files(self, upload_path: str, extensions: List[str]) -> List[str]:

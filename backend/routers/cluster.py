@@ -21,9 +21,6 @@ async def cluster_findings(
     """
     try:
         logger.info(f"Clustering {len(request.findings)} findings")
-        print(f"DEBUG: Cluster request - findings count: {len(request.findings)}")
-        print(f"DEBUG: Cluster request - method: {request.clustering_method}")
-        print(f"DEBUG: Cluster request - threshold: {request.similarity_threshold}")
         
         # Perform clustering
         clusters = await cluster_service.cluster_findings(

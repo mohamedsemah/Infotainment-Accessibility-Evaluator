@@ -18,7 +18,6 @@ async def create_agent_plan(
 ):
     """Create an execution plan for Special Agents."""
     try:
-        print(f"DEBUG: Plan request - upload_id: {upload_id}")
         # Get analysis summary
         analysis_summary = await analyze_upload(upload_id)
         
@@ -79,8 +78,6 @@ async def create_agent_plan(
         return plan
         
     except Exception as e:
-        print(f"DEBUG: Plan creation error: {str(e)}")
-        print(f"DEBUG: Error type: {type(e)}")
         raise HTTPException(
             status_code=500,
             detail={

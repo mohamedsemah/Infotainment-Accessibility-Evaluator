@@ -102,22 +102,12 @@ class SuperAgent:
             # Collect all findings and set agent names
             self.all_findings = []
             for agent_name, result in execution_results['results'].items():
-                print(f"DEBUG: Agent {agent_name} found {len(result.findings)} findings")
-                for i, finding in enumerate(result.findings):
-                    print(f"DEBUG: Finding {i+1}: {finding.details} (WCAG: {finding.wcag_criterion})")
+                for finding in result.findings:
                     finding.agent = agent_name
                 self.all_findings.extend(result.findings)
             
-            print(f"DEBUG: Total findings collected: {len(self.all_findings)}")
-            
             # Set all_findings in execution_results - convert to dicts for JSON serialization
             execution_results['all_findings'] = [finding.dict() for finding in self.all_findings]
-            print(f"DEBUG: execution_results['all_findings'] length: {len(execution_results['all_findings'])}")
-            
-            # Debug: Check if findings are now dictionaries
-            if execution_results['all_findings']:
-                print(f"DEBUG: First finding type: {type(execution_results['all_findings'][0])}")
-                print(f"DEBUG: First finding keys: {list(execution_results['all_findings'][0].keys()) if isinstance(execution_results['all_findings'][0], dict) else 'Not a dict'}")
             
             # Run TriageAgent to cluster findings
             if self.all_findings:
@@ -175,23 +165,17 @@ class SuperAgent:
             start_time = datetime.now()
             
             # Execute agent
-            print(f"DEBUG: Executing {agent_name} on {upload_path}")
             if agent_name == 'TriageAgent':
                 # TriageAgent needs findings from other agents
                 findings = execution_results.get('all_findings', [])
-                print(f"DEBUG: TriageAgent analyzing {len(findings)} findings")
                 result = await agent.analyze(findings, upload_id)
             elif agent_name == 'TokenHarmonizerAgent':
                 # TokenHarmonizerAgent needs clusters
                 clusters = execution_results.get('clusters', [])
-                print(f"DEBUG: TokenHarmonizerAgent analyzing {len(clusters)} clusters")
                 result = await agent.analyze(clusters, upload_path)
             else:
                 # Other agents analyze the upload
-                print(f"DEBUG: {agent_name} analyzing upload path: {upload_path}")
                 result = await agent.analyze(upload_path)
-            
-            print(f"DEBUG: {agent_name} returned {len(result) if isinstance(result, list) else 'non-list'} results")
             
             end_time = datetime.now()
             processing_time = (end_time - start_time).total_seconds()
